@@ -49,13 +49,7 @@ test: $(BINARY_NAME)
 ciplatforms-external-metrics-container: $(BINARY_NAME)
 	cp deploy/Dockerfile $(TEMP_DIR)
 	cp $(OUT_DIR)/$(ARCH)/$(BINARY_NAME) $(TEMP_DIR)/adapter
-	cd $(TEMP_DIR) && sed -i.bak "s|BASEIMAGE|scratch|g" Dockerfile
+	cd $(TEMP_DIR)
 	sed -i.bak 's|REGISTRY|'${REGISTRY}'|g' deploy/testing-adapter.yaml
 	docker build -t $(REGISTRY)/$(IMAGE)-$(ARCH):$(VERSION) $(TEMP_DIR)
 	rm -rf $(TEMP_DIR) deploy/testing-adapter.yaml.bak
-
-.PHONY: test-kind
-test-kind:
-	kind load docker-image $(REGISTRY)/$(IMAGE)-$(ARCH):$(VERSION)
-	kubectl apply -f deploy/testing-adapter.yaml
-	kubectl rollout restart -n custom-metrics deployment/custom-metrics-apiserver

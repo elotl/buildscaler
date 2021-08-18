@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: external-metrics-apiserver
+  name: external-metrics-apiserver
+  namespace: external-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: external-metrics-apiserver
+  template:
+    metadata:
+      labels:
+        app: external-metrics-apiserver
+      name: external-metrics-apiserver
+    spec:
+      serviceAccountName: external-metrics-apiserver
+      containers:
+        - name: external-metrics-apiserver
+          image: 689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl-dev/ciplatforms-external-metrics-amd64:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - /adapter
+            - --secure-port=6443
+            - --logtostderr=true
+            - --v=5
+          ports:
+            - containerPort: 6443
+              name: https
+            - containerPort: 8080
+              name: http
+          volumeMounts:
+            - mountPath: /tmp
+              name: temp-vol
+      volumes:
+        - name: temp-vol
+          emptyDir: {}

@@ -47,6 +47,9 @@ func main() {
 	}
 	storage := &sync.Map{}
 
+	// TODO: remove
+	storage.Store("build_queue_waiting", 127)
+
 	externalMetricsProvider := adapter.makeProviderOrDie(storage)
 	adapter.WithExternalMetrics(externalMetricsProvider)
 	ctx, cancel := context.WithCancel(context.Background())
