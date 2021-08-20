@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"github.com/elotl/ciplatforms-external-metrics/pkg/ciprovider"
 	"github.com/elotl/ciplatforms-external-metrics/pkg/scraper"
 	"k8s.io/component-base/logs"
 	"k8s.io/klog/v2"
+	"k8s.io/metrics/pkg/apis/external_metrics"
 	"os"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/cmd"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/provider"
@@ -14,66 +16,110 @@ import (
 	"time"
 )
 
-type YourAdapter struct {
-	cmd.AdapterBase
-	// the message printed on startup
-	Message string
-}
+var (
+	BuildkitePlatform = "buildkite"
+	CircleCIPlatform  = "circleci"
+	FakeCIPlatform    = "fake"
 
-func (a *YourAdapter) makeProviderOrDie(storage *sync.Map) provider.ExternalMetricsProvider {
-	//client, err := a.DynamicClient()
-	//if err != nil {
-	//	klog.Fatalf("unable to construct dynamic client: %v", err)
-	//}
-	//
-	//mapper, err := a.RESTMapper()
-	//if err != nil {
-	//	klog.Fatalf("unable to construct discovery REST mapper: %v", err)
-	//}
+	CIPlatforms = []string{
+		BuildkitePlatform,
+		CircleCIPlatform,
+		FakeCIPlatform,
+	}
+)
+
+func makeProviderOrDie(storage *sync.Map) provider.ExternalMetricsProvider {
 	return ciprovider.NewFakeProvider(storage)
 }
 
 func main() {
-	adapter := &YourAdapter{Message: "buildkite_adapter"}
+	adapter := &cmd.AdapterBase{
+		Name: "ci-platforms-metrics-adapter",
+	}
 	logs.InitLogs()
 	defer logs.FlushLogs()
 	var scrapePeriod time.Duration
-	adapter.Flags().StringVar(&adapter.Message, "msg", "starting adapter...", "startup message")
+	var CIPlatform string
 	adapter.Flags().DurationVar(&scrapePeriod, "scrape-period", time.Second*5, "scrape period")
+	adapter.Flags().StringVar(
+		&CIPlatform,
+		"ci-platform",
+		FakeCIPlatform,
+		fmt.Sprintf("specify CI platform for scraping metrics. \nSupported platforms: %s", CIPlatforms),
+	)
 	adapter.Flags().AddGoFlagSet(flag.CommandLine) // make sure you get the klog flags
 	err := adapter.Flags().Parse(os.Args)
 	if err != nil {
 		klog.Fatal(err)
 	}
-	storage := &sync.Map{}
+	var externalMetricsProvider provider.ExternalMetricsProvider
+	var metricsScraper scraper.CIScraper
+	switch CIPlatform {
+	case CircleCIPlatform:
+		// TODO
+		klog.Fatal("circleCI not implemented")
+	case BuildkitePlatform:
+		// TODO
+		token := GetBuildkiteTokenFromEnvOrDie()
+		rwm := &sync.RWMutex{}
+		storage := &ciprovider.ExternalMetricsMap{
+			RWMutex: rwm,
+			Data:    make(map[string]external_metrics.ExternalMetricValue),
+		}
+		externalMetricsProvider = ciprovider.NewBuildkiteMetricsProvider(storage)
+		metricsScraper = scraper.NewBuildkiteScraper(storage, token, "v0.0.1", []string{"macos"})
+	case FakeCIPlatform:
+		storage := &sync.Map{}
+		// TODO: remove
+		storage.Store("build_queue_waiting", 127)
+		externalMetricsProvider = makeProviderOrDie(storage)
+		metricsScraper = scraper.New(storage)
+	default:
+		klog.Fatal("unknown ci platform")
+	}
+	klog.V(2).Infof("using %s scraper & metrics provider", CIPlatform)
 
-	// TODO: remove
-	storage.Store("build_queue_waiting", 127)
-
-	externalMetricsProvider := adapter.makeProviderOrDie(storage)
 	adapter.WithExternalMetrics(externalMetricsProvider)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	klog.Infof(adapter.Message)
-	fakeScraper := scraper.New(storage)
 	ticker := time.NewTicker(scrapePeriod)
-	if err := adapter.Run(ctx.Done()); err != nil {
-		klog.Fatalf("unable to run metrics adapter: %v", err)
-	}
-	for {
-		go func() {
-			err := fakeScraper.Scrape(cancel)
-			if err != nil {
-				klog.Error(err)
-			}
-		}()
-		select {
-		case <-ctx.Done():
-			klog.V(3).Info("scraping finished.")
-			return
-		case <-ticker.C:
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		if err := adapter.Run(ctx.Done()); err != nil {
+			klog.Fatalf("unable to run metrics adapter: %v", err)
+			wg.Done()
+			cancel()
 		}
-	}
 
+	}()
+	klog.V(2).Infof("server runs, let's start a scraper...")
+	wg.Add(1)
+	go func() {
+		for {
+			err := metricsScraper.Scrape(cancel)
+			if err != nil {
+				klog.Errorf("error scraping metrics: %v", err)
+				cancel()
+			}
+			select {
+			case <-ctx.Done():
+				klog.V(3).Info("scraping finished.")
+				wg.Done()
+				return
+			case <-ticker.C:
+			}
+		}
+	}()
+	wg.Wait()
+
+}
+
+func GetBuildkiteTokenFromEnvOrDie() string {
+	token := os.Getenv("BUILDKITE_AGENT_TOKEN")
+	if token == "" {
+		klog.Fatal("cannot get Buildkite Agent Token from BUILDKITE_AGENT_TOKEN env var")
+	}
+	return token
 }

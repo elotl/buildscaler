@@ -21,8 +21,3 @@ func (f *FakeScraper) Scrape(cancel context.CancelFunc) error {
 	}
 	return nil
 }
-
-func (f *FakeScraper) GetMetricValue(name string) interface{} {
-	v, _ := f.storage.Load(name)
-	return v
-}
