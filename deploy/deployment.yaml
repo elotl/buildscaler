@@ -26,7 +26,11 @@ spec:
             - /adapter
             - --secure-port=6443
             - --logtostderr=true
-            - --v=5
+            - --v=6
+            - --ci-platform=buildkite
+          env:
+            - name: BUILDKITE_AGENT_TOKEN
+              value: FILL_IN
           ports:
             - containerPort: 6443
               name: https
