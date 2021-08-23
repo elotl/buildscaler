@@ -50,10 +50,10 @@ img: $(BINARY_NAME)
 	cp deploy/Dockerfile $(TEMP_DIR)
 	cp $(OUT_DIR)/$(ARCH)/$(BINARY_NAME) $(TEMP_DIR)/adapter
 	cd $(TEMP_DIR)
-	docker build -t $(REGISTRY)/$(IMAGE)-$(ARCH):$(VERSION) $(TEMP_DIR)
+	docker build -t $(REGISTRY)/$(IMAGE):$(VERSION) $(TEMP_DIR)
 	rm -rf $(TEMP_DIR)
 
 .PHONY: push-img
 push-img: img
-	docker push $(REGISTRY)/$(IMAGE)-$(ARCH):$(VERSION)
+	docker push $(REGISTRY)/$(IMAGE):$(VERSION)
 

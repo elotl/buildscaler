@@ -31,7 +31,7 @@ jobs:
             ${{ runner.os }}-go-
       - name: Lint
         run: make verify-gofmt
-      - name: Build mac-autoscaler
+      - name: Build binary
         run: make
       - name: Test
         run: make test
