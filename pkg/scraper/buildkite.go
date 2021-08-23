@@ -97,7 +97,7 @@ func (c *Collector) Scrape(cancel context.CancelFunc) error {
 			if ok {
 				klog.V(5).Infof("metric %s already has value, overwriting...", key)
 				c.storage.RWMutex.Lock()
-				delete(c.storage.Data,key)
+				delete(c.storage.Data, key)
 				c.storage.RWMutex.Unlock()
 			}
 			c.storage.RWMutex.Lock()

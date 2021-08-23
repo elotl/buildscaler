@@ -1,0 +1,56 @@
+on: push
+
+env:
+  AWS_REGION: us-east-1
+  AWS_DEFAULT_REGION: us-east-1
+  ECR_REPO: elotl-dev/ciplatforms-external-metrics
+name: Build and test
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.16.x
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+      - run: git fetch origin +refs/tags/*:refs/tags/*
+      - uses: actions/cache@v2
+        with:
+          # In order:
+          # * Module download cache
+          # * Build cache (Linux)
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Lint
+        run: make verify-gofmt
+      - name: Build mac-autoscaler
+        run: make
+      - name: Test
+        run: make test
+      - name: Set VERSION
+        id: set_version
+        run: echo ::set-output name=VERSION::$(git describe --dirty)
+      - name: Log into ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
+
+      - name: Build image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: make img VERSION=${{ steps.set_version.outputs.VERSION }}
+
+      - name: Push image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: make push-img VERSION=${{ steps.set_version.outputs.VERSION }}

@@ -45,11 +45,15 @@ verify-gofmt:
 test: $(BINARY_NAME)
 	CGO_ENABLED=0 go test ./pkg/...
 
-.PHONY: ciplatforms-external-metrics-container
-ciplatforms-external-metrics-container: $(BINARY_NAME)
+.PHONY: img
+img: $(BINARY_NAME)
 	cp deploy/Dockerfile $(TEMP_DIR)
 	cp $(OUT_DIR)/$(ARCH)/$(BINARY_NAME) $(TEMP_DIR)/adapter
 	cd $(TEMP_DIR)
-	sed -i.bak 's|REGISTRY|'${REGISTRY}'|g' deploy/testing-adapter.yaml
 	docker build -t $(REGISTRY)/$(IMAGE)-$(ARCH):$(VERSION) $(TEMP_DIR)
-	rm -rf $(TEMP_DIR) deploy/testing-adapter.yaml.bak
+	rm -rf $(TEMP_DIR)
+
+.PHONY: push-img
+push-img: img
+	docker push $(REGISTRY)/$(IMAGE)-$(ARCH):$(VERSION)
+

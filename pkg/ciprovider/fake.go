@@ -34,8 +34,8 @@ func (fk *FakeProvider) GetExternalMetric(ctx context.Context, namespace string,
 	return &external_metrics.ExternalMetricValueList{
 		Items: []external_metrics.ExternalMetricValue{
 			{
-				MetricName:   "build_queue_waiting",
-				Value:        resource.MustParse(value),
+				MetricName: "build_queue_waiting",
+				Value:      resource.MustParse(value),
 			},
 		},
 	}, nil

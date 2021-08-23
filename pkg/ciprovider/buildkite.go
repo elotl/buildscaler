@@ -12,7 +12,7 @@ import (
 
 type ExternalMetricsMap struct {
 	RWMutex *sync.RWMutex
-	Data map[string]external_metrics.ExternalMetricValue
+	Data    map[string]external_metrics.ExternalMetricValue
 }
 
 type BuildkiteMetricsProvider struct {
@@ -52,7 +52,7 @@ func (b *BuildkiteMetricsProvider) GetExternalMetric(ctx context.Context, namesp
 	val, ok := b.storage.Data[info.Metric]
 	b.storage.RWMutex.RUnlock()
 	if !ok {
-		return nil, errors.New("metric " +  info.Metric + " not found")
+		return nil, errors.New("metric " + info.Metric + " not found")
 	}
 	externalMetric := val
 	if metricSelector.Empty() {
@@ -64,7 +64,7 @@ func (b *BuildkiteMetricsProvider) GetExternalMetric(ctx context.Context, namesp
 	if !metricSelector.Matches(matcher) {
 		return &external_metrics.ExternalMetricValueList{
 			Items: []external_metrics.ExternalMetricValue{},
-		}, errors.New("metric " +  info.Metric + " with labels " + metricSelector.String() + " not found")
+		}, errors.New("metric " + info.Metric + " with labels " + metricSelector.String() + " not found")
 	}
 	return &external_metrics.ExternalMetricValueList{
 		Items: []external_metrics.ExternalMetricValue{externalMetric},
