@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/elotl/ciplatforms-external-metrics/pkg/ciprovider"
+	"github.com/elotl/ciplatforms-external-metrics/pkg/storage"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
@@ -44,10 +44,10 @@ type Collector struct {
 	Quiet     bool
 	Debug     bool
 	DebugHttp bool
-	storage   *ciprovider.ExternalMetricsMap
+	storage   *storage.ExternalMetricsMap
 }
 
-func NewBuildkiteScraper(storage *ciprovider.ExternalMetricsMap, token, version string, queues []string) *Collector {
+func NewBuildkiteScraper(storage *storage.ExternalMetricsMap, token, version string, queues []string) *Collector {
 	return &Collector{
 		Endpoint:  "https://agent.buildkite.com/v3", // should we pass it from flags?
 		Token:     token,
@@ -68,47 +68,22 @@ func (c *Collector) Scrape(cancel context.CancelFunc) error {
 	}
 	for name, value := range r.Totals {
 		key := fmt.Sprintf("buildkite_total_%s", camelToUnderscore(name))
-		c.storage.RWMutex.RLock()
-		_, ok := c.storage.Data[key]
-		c.storage.RWMutex.RUnlock()
-		if ok {
-			klog.V(5).Infof("metric %s already has value, overwriting...", key)
-			c.storage.RWMutex.Lock()
-			delete(c.storage.Data, key)
-			c.storage.RWMutex.Unlock()
-
-		}
-		c.storage.RWMutex.Lock()
-		c.storage.Data[key] = external_metrics.ExternalMetricValue{
+		c.storage.OverrideOrStore(key, external_metrics.ExternalMetricValue{
 			MetricName: key,
 			Timestamp:  v1.NewTime(time.Now()),
 			Value:      resource.MustParse(strconv.Itoa(value)),
-		}
-		c.storage.RWMutex.Unlock()
-		klog.V(5).Infof("metric % successfully scraped and stored.", key)
+		})
 	}
 
 	for queue, counts := range r.Queues {
 		for name, value := range counts {
 			key := camelToUnderscore(name)
-			c.storage.RWMutex.RLock()
-			_, ok := c.storage.Data[key]
-			c.storage.RWMutex.RUnlock()
-			if ok {
-				klog.V(5).Infof("metric %s already has value, overwriting...", key)
-				c.storage.RWMutex.Lock()
-				delete(c.storage.Data, key)
-				c.storage.RWMutex.Unlock()
-			}
-			c.storage.RWMutex.Lock()
-			c.storage.Data[key] = external_metrics.ExternalMetricValue{
+			c.storage.OverrideOrStore(key, external_metrics.ExternalMetricValue{
 				MetricName:   key,
 				MetricLabels: map[string]string{"queue": queue},
 				Timestamp:    v1.NewTime(time.Now()),
 				Value:        resource.MustParse(strconv.Itoa(value)),
-			}
-			c.storage.RWMutex.Unlock()
-			klog.V(5).Infof("metric % successfully scraped and stored.", key)
+			})
 		}
 	}
 	return nil

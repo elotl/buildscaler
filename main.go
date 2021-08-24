@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"github.com/elotl/ciplatforms-external-metrics/pkg/ciprovider"
 	"github.com/elotl/ciplatforms-external-metrics/pkg/scraper"
+	storagemap "github.com/elotl/ciplatforms-external-metrics/pkg/storage"
 	"k8s.io/component-base/logs"
 	"k8s.io/klog/v2"
 	"k8s.io/metrics/pkg/apis/external_metrics"
 	"os"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/cmd"
-	"sigs.k8s.io/custom-metrics-apiserver/pkg/provider"
 	"sync"
 	"time"
 )
@@ -28,9 +28,9 @@ var (
 	}
 )
 
-func makeProviderOrDie(storage *sync.Map) provider.ExternalMetricsProvider {
-	return ciprovider.NewFakeProvider(storage)
-}
+//func makeProviderOrDie(storage *sync.Map) provider.ExternalMetricsProvider {
+//	return ciprovider.NewFakeProvider(storage)
+//}
 
 func main() {
 	adapter := &cmd.AdapterBase{
@@ -52,33 +52,35 @@ func main() {
 	if err != nil {
 		klog.Fatal(err)
 	}
-	var externalMetricsProvider provider.ExternalMetricsProvider
+	rwm := &sync.RWMutex{}
+	storage := &storagemap.ExternalMetricsMap{
+		RWMutex: rwm,
+		Data:    make(map[string]external_metrics.ExternalMetricValue),
+	}
 	var metricsScraper scraper.CIScraper
 	switch CIPlatform {
 	case CircleCIPlatform:
 		// TODO
-		klog.Fatal("circleCI not implemented")
-	case BuildkitePlatform:
-		// TODO
-		token := GetBuildkiteTokenFromEnvOrDie()
-		rwm := &sync.RWMutex{}
-		storage := &ciprovider.ExternalMetricsMap{
-			RWMutex: rwm,
-			Data:    make(map[string]external_metrics.ExternalMetricValue),
+		token := GetCircleCITokenFromEnvOrDie()
+		metricsScraper, err = scraper.NewCircleCIScraper(token, "", time.Minute*30)
+		if err != nil {
+			klog.Fatalf("cannot start CircleCI scraper: %v", err)
 		}
-		externalMetricsProvider = ciprovider.NewBuildkiteMetricsProvider(storage)
+	case BuildkitePlatform:
+		// TODO: get params from env/flags
+		token := GetBuildkiteTokenFromEnvOrDie()
 		metricsScraper = scraper.NewBuildkiteScraper(storage, token, "v0.0.1", []string{"macos"})
-	case FakeCIPlatform:
-		storage := &sync.Map{}
-		// TODO: remove
-		storage.Store("build_queue_waiting", 127)
-		externalMetricsProvider = makeProviderOrDie(storage)
-		metricsScraper = scraper.New(storage)
+	//case FakeCIPlatform:
+	//	storage := &sync.Map{}
+	//	// TODO: remove
+	//	storage.Store("build_queue_waiting", 127)
+	//	externalMetricsProvider = makeProviderOrDie(storage)
+	//	metricsScraper = scraper.New(storage)
 	default:
 		klog.Fatal("unknown ci platform")
 	}
 	klog.V(2).Infof("using %s scraper & metrics provider", CIPlatform)
-
+	externalMetricsProvider := ciprovider.NewExternalMetricsProviderFromStorage(storage)
 	adapter.WithExternalMetrics(externalMetricsProvider)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -120,6 +122,14 @@ func GetBuildkiteTokenFromEnvOrDie() string {
 	token := os.Getenv("BUILDKITE_AGENT_TOKEN")
 	if token == "" {
 		klog.Fatal("cannot get Buildkite Agent Token from BUILDKITE_AGENT_TOKEN env var")
+	}
+	return token
+}
+
+func GetCircleCITokenFromEnvOrDie() string {
+	token := os.Getenv("CIRCLECI_TOKEN")
+	if token == "" {
+		klog.Fatal("cannot get CircleCI API Token from CIRCLECI_TOKEN env var")
 	}
 	return token
 }
