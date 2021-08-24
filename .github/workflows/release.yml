@@ -1,15 +1,13 @@
 on:
   push:
-    branches:
-      - '**'
-    tags-ignore:
-      - v*
+    tags: v*
 
 env:
   AWS_REGION: us-east-1
   AWS_DEFAULT_REGION: us-east-1
-  ECR_REPO: elotl-dev/ciplatforms-external-metrics
-name: Build and test
+  ECR_REPO: elotl/ciplatforms-external-metrics
+
+name: Release
 jobs:
   build:
     runs-on: ubuntu-latest

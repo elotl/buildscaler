@@ -5,13 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"github.com/elotl/ciplatforms-external-metrics/pkg/ciprovider"
-	"github.com/elotl/ciplatforms-external-metrics/pkg/scraper"
+	"github.com/elotl/ciplatforms-external-metrics/pkg/collector"
+	storagemap "github.com/elotl/ciplatforms-external-metrics/pkg/storage"
 	"k8s.io/component-base/logs"
 	"k8s.io/klog/v2"
 	"k8s.io/metrics/pkg/apis/external_metrics"
 	"os"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/cmd"
-	"sigs.k8s.io/custom-metrics-apiserver/pkg/provider"
+	"strings"
 	"sync"
 	"time"
 )
@@ -19,18 +20,12 @@ import (
 var (
 	BuildkitePlatform = "buildkite"
 	CircleCIPlatform  = "circleci"
-	FakeCIPlatform    = "fake"
 
 	CIPlatforms = []string{
 		BuildkitePlatform,
 		CircleCIPlatform,
-		FakeCIPlatform,
 	}
 )
-
-func makeProviderOrDie(storage *sync.Map) provider.ExternalMetricsProvider {
-	return ciprovider.NewFakeProvider(storage)
-}
 
 func main() {
 	adapter := &cmd.AdapterBase{
@@ -44,7 +39,7 @@ func main() {
 	adapter.Flags().StringVar(
 		&CIPlatform,
 		"ci-platform",
-		FakeCIPlatform,
+		BuildkitePlatform,
 		fmt.Sprintf("specify CI platform for scraping metrics. \nSupported platforms: %s", CIPlatforms),
 	)
 	adapter.Flags().AddGoFlagSet(flag.CommandLine) // make sure you get the klog flags
@@ -52,33 +47,29 @@ func main() {
 	if err != nil {
 		klog.Fatal(err)
 	}
-	var externalMetricsProvider provider.ExternalMetricsProvider
-	var metricsScraper scraper.CIScraper
+	rwm := &sync.RWMutex{}
+	storage := &storagemap.ExternalMetricsMap{
+		RWMutex: rwm,
+		Data:    make(map[string]external_metrics.ExternalMetricValue),
+	}
+	var metricsCollector collector.CIMetricsCollector
 	switch CIPlatform {
 	case CircleCIPlatform:
 		// TODO
-		klog.Fatal("circleCI not implemented")
-	case BuildkitePlatform:
-		// TODO
-		token := GetBuildkiteTokenFromEnvOrDie()
-		rwm := &sync.RWMutex{}
-		storage := &ciprovider.ExternalMetricsMap{
-			RWMutex: rwm,
-			Data:    make(map[string]external_metrics.ExternalMetricValue),
+		token, projectSlug := GetCircleCIConfigFromEnvOrDie()
+		metricsCollector, err = collector.NewCircleCICollector(token, projectSlug, time.Minute*30, storage)
+		if err != nil {
+			klog.Fatalf("cannot start CircleCI scraper: %v", err)
 		}
-		externalMetricsProvider = ciprovider.NewBuildkiteMetricsProvider(storage)
-		metricsScraper = scraper.NewBuildkiteScraper(storage, token, "v0.0.1", []string{"macos"})
-	case FakeCIPlatform:
-		storage := &sync.Map{}
-		// TODO: remove
-		storage.Store("build_queue_waiting", 127)
-		externalMetricsProvider = makeProviderOrDie(storage)
-		metricsScraper = scraper.New(storage)
+	case BuildkitePlatform:
+		token := GetBuildkiteTokenFromEnvOrDie()
+		queues := GetBuildkiteQueuesFromEnv()
+		metricsCollector = collector.NewBuildkiteCollector(storage, token, "v0.0.1", queues)
 	default:
 		klog.Fatal("unknown ci platform")
 	}
 	klog.V(2).Infof("using %s scraper & metrics provider", CIPlatform)
-
+	externalMetricsProvider := ciprovider.NewExternalMetricsProviderFromStorage(storage)
 	adapter.WithExternalMetrics(externalMetricsProvider)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -98,7 +89,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		for {
-			err := metricsScraper.Scrape(cancel)
+			err := metricsCollector.Collect(cancel)
 			if err != nil {
 				klog.Errorf("error scraping metrics: %v", err)
 				cancel()
@@ -122,4 +113,25 @@ func GetBuildkiteTokenFromEnvOrDie() string {
 		klog.Fatal("cannot get Buildkite Agent Token from BUILDKITE_AGENT_TOKEN env var")
 	}
 	return token
+}
+
+func GetBuildkiteQueuesFromEnv() []string {
+	queuesStr := os.Getenv("BUILDKITE_QUEUES")
+	if queuesStr == "" {
+		return []string{}
+	}
+	queues := strings.Split(queuesStr, ",")
+	return queues
+}
+
+func GetCircleCIConfigFromEnvOrDie() (string, string) {
+	token := os.Getenv("CIRCLECI_TOKEN")
+	if token == "" {
+		klog.Fatal("cannot get CircleCI API Token from CIRCLECI_TOKEN env var")
+	}
+	projectSlug := os.Getenv("CIRCLECI_PROJECT_SLUG")
+	if projectSlug == "" {
+		klog.Fatalf("cannot get CircleCI project slug from CIRCLECI_PROJECT_SLUG en var")
+	}
+	return token, projectSlug
 }
