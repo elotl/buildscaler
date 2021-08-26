@@ -18,9 +18,10 @@ const (
 	JobStatusFailed                = "failed"
 	JobStatusRunning               = "running"
 	JobStatusWaiting               = "waiting"
-	ExternalMetricJobsRunningName  = "circleci_jobs_running"
+	ExternalMetricsJobsRunningName = "circleci_jobs_running"
 	ExternalMetricsJobsWaitingName = "circleci_jobs_waiting"
 	ExternalMetricsJobsFailedName  = "circleci_jobs_failed"
+	CircleCIAPIEndpoint            = "https://circleci.com/api/v2"
 )
 
 type PaginatedResponse struct {
@@ -67,6 +68,7 @@ type WorkflowReport struct {
 
 type CircleCIClient struct {
 	httpClient   http.Client
+	endpoint     string
 	pipelinesURL *url.URL
 	token        string
 }
@@ -176,7 +178,7 @@ func (cc *CircleCIClient) doListPipelineWorkflowsReq(workflowsURL *url.URL, next
 
 func (cc *CircleCIClient) listPipelineWorkflows(pipelineID string) ([]PipelineWorkflow, error) {
 	var pipelinesWorkflows []PipelineWorkflow
-	workflowsURL, err := buildPipelineWorkflowsURL(pipelineID)
+	workflowsURL, err := buildPipelineWorkflowsURL(cc.endpoint, pipelineID)
 	if err != nil {
 		return nil, err
 
@@ -217,7 +219,7 @@ func (cc *CircleCIClient) doListWorkflowJobs(jobsURL *url.URL, nextToken string)
 }
 
 func (cc *CircleCIClient) listWorkflowJobs(workflowID string) ([]WorkflowJob, error) {
-	jobsURL, err := BuildWorkflowJobsURL(workflowID)
+	jobsURL, err := BuildWorkflowJobsURL(cc.endpoint, workflowID)
 	if err != nil {
 		return nil, err
 	}
@@ -247,20 +249,20 @@ type CircleCIScraper struct {
 	storage        *storage.ExternalMetricsMap
 }
 
-func buildProjectPipelinesURL(projectSlug string) (*url.URL, error) {
-	return url.Parse("https://circleci.com/api/v2/project/" + projectSlug + "/pipeline")
+func buildProjectPipelinesURL(endpoint, projectSlug string) (*url.URL, error) {
+	return url.Parse(endpoint + "/project/" + projectSlug + "/pipeline")
 }
 
-func buildPipelineWorkflowsURL(pipelineID string) (*url.URL, error) {
-	return url.Parse("https://circleci.com/api/v2/pipeline/" + pipelineID + "/workflow")
+func buildPipelineWorkflowsURL(endpoint, pipelineID string) (*url.URL, error) {
+	return url.Parse(endpoint + "/pipeline/" + pipelineID + "/workflow")
 }
 
-func BuildWorkflowJobsURL(workflowID string) (*url.URL, error) {
-	return url.Parse("https://circleci.com/api/v2/workflow/" + workflowID + "/job")
+func BuildWorkflowJobsURL(endpoint, workflowID string) (*url.URL, error) {
+	return url.Parse(endpoint + "/workflow/" + workflowID + "/job")
 }
 
 func NewCircleCIScraper(token, projectSlug string, maxPipelineAge time.Duration, storage *storage.ExternalMetricsMap) (*CircleCIScraper, error) {
-	pipelinesURL, err := buildProjectPipelinesURL(projectSlug)
+	pipelinesURL, err := buildProjectPipelinesURL(CircleCIAPIEndpoint, projectSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -313,8 +315,8 @@ func (c *CircleCIScraper) Scrape(cancel context.CancelFunc) error {
 			result.JobsWaiting++
 		}
 	}
-	c.storage.OverrideOrStore(ExternalMetricJobsRunningName, external_metrics.ExternalMetricValue{
-		MetricName: ExternalMetricJobsRunningName,
+	c.storage.OverrideOrStore(ExternalMetricsJobsRunningName, external_metrics.ExternalMetricValue{
+		MetricName: ExternalMetricsJobsRunningName,
 		MetricLabels: map[string]string{
 			"project_slug": c.projectSlug,
 		},
