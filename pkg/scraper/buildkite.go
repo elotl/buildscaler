@@ -89,6 +89,7 @@ func (c *Collector) Scrape(cancel context.CancelFunc) error {
 	return nil
 }
 
+// Copyright (c) 2016 Buildkite Pty Ltd
 // everything below is copied from buildkite/buildkite-agent-metrics
 type Result struct {
 	Totals       map[string]int
