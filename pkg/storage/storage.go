@@ -26,7 +26,7 @@ func (e *ExternalMetricsMap) OverrideOrStore(key string, value external_metrics.
 	e.RWMutex.Lock()
 	e.Data[key] = value
 	e.RWMutex.Unlock()
-	klog.V(5).Infof("metric % successfully scraped and stored.", key)
+	klog.V(5).Infof("metric %s successfully scraped and stored.", key)
 }
 
 func (e *ExternalMetricsMap) ListExternalMetricInfo() []provider.ExternalMetricInfo {

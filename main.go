@@ -61,8 +61,8 @@ func main() {
 	switch CIPlatform {
 	case CircleCIPlatform:
 		// TODO
-		token := GetCircleCITokenFromEnvOrDie()
-		metricsScraper, err = scraper.NewCircleCIScraper(token, "", time.Minute*30)
+		token, projectSlug := GetCircleCIConfigFromEnvOrDie()
+		metricsScraper, err = scraper.NewCircleCIScraper(token, projectSlug, time.Minute*30, storage)
 		if err != nil {
 			klog.Fatalf("cannot start CircleCI scraper: %v", err)
 		}
@@ -126,10 +126,14 @@ func GetBuildkiteTokenFromEnvOrDie() string {
 	return token
 }
 
-func GetCircleCITokenFromEnvOrDie() string {
+func GetCircleCIConfigFromEnvOrDie() (string, string) {
 	token := os.Getenv("CIRCLECI_TOKEN")
 	if token == "" {
 		klog.Fatal("cannot get CircleCI API Token from CIRCLECI_TOKEN env var")
 	}
-	return token
+	projectSlug := os.Getenv("CIRCLECI_PROJECT_SLUG")
+	if projectSlug == "" {
+		klog.Fatalf("cannot get CircleCI project slug from CIRCLECI_PROJECT_SLUG en var")
+	}
+	return token, projectSlug
 }

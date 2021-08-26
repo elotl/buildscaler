@@ -18,7 +18,7 @@ const (
 	JobStatusFailed                = "failed"
 	JobStatusRunning               = "running"
 	JobStatusWaiting               = "waiting"
-	ExternalMetricJobsRunningName  = "cicrcleci_jobs_running"
+	ExternalMetricJobsRunningName  = "circleci_jobs_running"
 	ExternalMetricsJobsWaitingName = "circleci_jobs_waiting"
 	ExternalMetricsJobsFailedName  = "circleci_jobs_failed"
 )
@@ -72,12 +72,13 @@ type CircleCIClient struct {
 }
 
 func (cc *CircleCIClient) doRequest(req *http.Request, nextPageToken string) (*http.Response, error) {
-	req.Header.Add("Circle-Token", cc.token)
+	req.Header = make(map[string][]string, 0)
+	req.Header.Set("Circle-Token", cc.token)
 	if nextPageToken != "" {
 		req.URL.Query().Add("Circle-Token", nextPageToken)
 	}
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	return cc.httpClient.Do(req)
 }
 
@@ -258,7 +259,7 @@ func BuildWorkflowJobsURL(workflowID string) (*url.URL, error) {
 	return url.Parse("https://circleci.com/api/v2/workflow/" + workflowID + "/job")
 }
 
-func NewCircleCIScraper(token, projectSlug string, maxPipelineAge time.Duration) (*CircleCIScraper, error) {
+func NewCircleCIScraper(token, projectSlug string, maxPipelineAge time.Duration, storage *storage.ExternalMetricsMap) (*CircleCIScraper, error) {
 	pipelinesURL, err := buildProjectPipelinesURL(projectSlug)
 	if err != nil {
 		return nil, err
@@ -271,7 +272,7 @@ func NewCircleCIScraper(token, projectSlug string, maxPipelineAge time.Duration)
 		token:        token,
 		pipelinesURL: pipelinesURL,
 	}
-	return &CircleCIScraper{client: client, maxPipelineAge: maxPipelineAge, projectSlug: projectSlug}, nil
+	return &CircleCIScraper{client: client, maxPipelineAge: maxPipelineAge, projectSlug: projectSlug, storage: storage}, nil
 }
 
 func (c *CircleCIScraper) Scrape(cancel context.CancelFunc) error {
