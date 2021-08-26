@@ -30,7 +30,9 @@ func (e *ExternalMetricsMap) OverrideOrStore(key string, value external_metrics.
 }
 
 func (e *ExternalMetricsMap) ListExternalMetricInfo() []provider.ExternalMetricInfo {
-	var metrics []provider.ExternalMetricInfo
+	var (
+		metrics []provider.ExternalMetricInfo
+	)
 	e.RWMutex.RLock()
 	defer e.RWMutex.RUnlock()
 	for key := range e.Data {

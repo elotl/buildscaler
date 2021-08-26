@@ -43,7 +43,7 @@ verify-gofmt:
 
 .PHONY: test
 test: $(BINARY_NAME)
-	CGO_ENABLED=0 go test ./pkg/...
+	CGO_ENABLED=0 go test -v ./pkg/...
 
 .PHONY: img
 img: $(BINARY_NAME)
