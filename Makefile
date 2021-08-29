@@ -43,7 +43,7 @@ verify-gofmt:
 
 .PHONY: test
 test: $(BINARY_NAME)
-	CGO_ENABLED=0 go test -v ./pkg/...
+	go test -v -race -timeout=60s -cover  ./pkg/...
 
 .PHONY: img
 img: $(BINARY_NAME)
