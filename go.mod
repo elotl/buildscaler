@@ -3,6 +3,7 @@ module github.com/elotl/ciplatforms-external-metrics
 go 1.16
 
 require (
+	github.com/stretchr/testify v1.7.0
 	k8s.io/apimachinery v0.22.0
 	k8s.io/component-base v0.22.0
 	k8s.io/klog/v2 v2.10.0
