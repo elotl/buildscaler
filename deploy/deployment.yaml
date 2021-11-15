@@ -20,7 +20,7 @@ spec:
       serviceAccountName: external-metrics-apiserver
       containers:
         - name: external-metrics-apiserver
-          image: 689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl/ciplatforms-external-metrics-amd64:v0.1.0
+          image: 689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl/ciplatforms-external-metrics:v0.1.0
           imagePullPolicy: IfNotPresent
           args:
             - /adapter
