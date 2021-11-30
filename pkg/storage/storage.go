@@ -1,10 +1,11 @@
 package storage
 
 import (
+	"sync"
+
 	"k8s.io/klog/v2"
 	"k8s.io/metrics/pkg/apis/external_metrics"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/provider"
-	"sync"
 )
 
 type ExternalMetricsMap struct {

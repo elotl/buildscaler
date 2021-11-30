@@ -3,14 +3,15 @@ package ciprovider
 import (
 	"context"
 	"errors"
+	"sync"
+	"testing"
+
 	"github.com/elotl/buildscaler/pkg/storage"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/metrics/pkg/apis/external_metrics"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/provider"
-	"sync"
-	"testing"
 )
 
 func TestExternalMetricsProviderFromStorage_GetExternalMetric(t *testing.T) {

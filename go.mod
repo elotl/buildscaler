@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/tools v0.1.7 // indirect
 	k8s.io/apimachinery v0.22.2
 	k8s.io/component-base v0.22.2
 	k8s.io/klog/v2 v2.10.0

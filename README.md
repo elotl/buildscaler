@@ -5,6 +5,14 @@ lib](https://github.com/kubernetes-sigs/custom-metrics-apiserver) A service
 meant to provide k8s External Metrics from CI providers API, which can be
 later used to configure autoscaling via Horizontal Pod Autoscalers.
 
+# Requirements
+
+[goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) &
+[staticcheck](https://staticcheck.io/docs/):
+
+    $ go get golang.org/x/tools/cmd/goimports
+    $ go install honnef.co/go/tools/cmd/staticcheck@latest
+
 # Supported providers
 
 ## Buildkite

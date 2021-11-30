@@ -5,11 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/elotl/buildscaler/pkg/storage"
-	"k8s.io/apimachinery/pkg/api/resource"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/klog/v2"
-	"k8s.io/metrics/pkg/apis/external_metrics"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -17,6 +12,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/elotl/buildscaler/pkg/storage"
+	"k8s.io/apimachinery/pkg/api/resource"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
+	"k8s.io/metrics/pkg/apis/external_metrics"
 )
 
 const (
@@ -198,7 +199,7 @@ func (c *BuildkiteCollector) collect() (*Result, error) {
 				}
 			}
 
-			return nil, fmt.Errorf("Request failed with %s (%d)", res.Status, res.StatusCode)
+			return nil, fmt.Errorf("request failed with %s (%d)", res.Status, res.StatusCode)
 		}
 
 		var allMetrics allMetricsResponse
@@ -219,7 +220,7 @@ func (c *BuildkiteCollector) collect() (*Result, error) {
 		}
 
 		if allMetrics.Organization.Slug == "" {
-			return nil, fmt.Errorf("No organization slug was found in the metrics response")
+			return nil, fmt.Errorf("no organization slug was found in the metrics response")
 		}
 
 		klog.Infof("Found organization %q", allMetrics.Organization.Slug)
@@ -298,7 +299,7 @@ func (c *BuildkiteCollector) collect() (*Result, error) {
 			}
 
 			if queueMetrics.Organization.Slug == "" {
-				return nil, fmt.Errorf("No organization slug was found in the metrics response")
+				return nil, fmt.Errorf("no organization slug was found in the metrics response")
 			}
 
 			klog.V(5).Infof("Found organization %q", queueMetrics.Organization.Slug)
