@@ -22,6 +22,15 @@ pkg/generated/openapi/zz_generated.openapi.go: go.mod go.sum
 	    -o ./ \
 	    -r /dev/null
 
+.PHONY: bootstrap
+bootstrap: $(GOPATH)/bin/goimports $(GOPATH)/bin/staticcheck
+
+$(GOPATH)/bin/goimports:
+	go get golang.org/x/tools/cmd/goimports
+
+$(GOPATH)/bin/staticcheck:
+	go install honnef.co/go/tools/cmd/staticcheck@2021.1.2
+
 .PHONY: format
 format:
 	goimports -w $$(find . -type f -name '*.go' -not -path "./vendor/*")

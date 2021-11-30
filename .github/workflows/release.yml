@@ -33,7 +33,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Lint
-        run: make check
+        run: make bootstrap check
       - name: Build binary
         run: make buildscaler
       - name: Test
