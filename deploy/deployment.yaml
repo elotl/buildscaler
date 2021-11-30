@@ -23,7 +23,7 @@ spec:
           image: 689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl/buildscaler:v2.0.0
           imagePullPolicy: IfNotPresent
           args:
-            - /adapter
+            - /buildscaler
             - --secure-port=6443
             - --logtostderr=true
             - --v=6

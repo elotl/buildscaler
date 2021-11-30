@@ -1,18 +1,16 @@
+DOCKER=docker
 REGISTRY?=689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl-dev
 IMAGE?=buildscaler
-TEMP_DIR:=$(shell mktemp -d)
-ARCH?=amd64
-OUT_DIR?=./_output
 BINARY_NAME=buildscaler
 
-VERSION?=latest
+VERSION=$(shell git describe --dirty)
 
 .PHONY: all
 all: $(BINARY_NAME)
 
 .PHONY: $(BINARY_NAME)
-$(BINARY_NAME): pkg/generated/openapi/zz_generated.openapi.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=$(ARCH) go build -o $(OUT_DIR)/$(ARCH)/$(BINARY_NAME) main.go
+$(BINARY_NAME): pkg/generated/openapi/zz_generated.openapi.go main.go
+	go build -o $(BINARY_NAME) main.go
 
 pkg/generated/openapi/zz_generated.openapi.go: go.mod go.sum
 	go install -mod=readonly k8s.io/kube-openapi/cmd/openapi-gen
@@ -46,12 +44,8 @@ test: $(BINARY_NAME)
 	go test -v -race -timeout=60s -cover  ./pkg/...
 
 .PHONY: img
-img: $(BINARY_NAME)
-	cp deploy/Dockerfile $(TEMP_DIR)
-	cp $(OUT_DIR)/$(ARCH)/$(BINARY_NAME) $(TEMP_DIR)/adapter
-	cd $(TEMP_DIR)
-	docker build -t $(REGISTRY)/$(IMAGE):$(VERSION) $(TEMP_DIR)
-	rm -rf $(TEMP_DIR)
+img:
+	$(DOCKER) build -t $(REGISTRY)/$(IMAGE):$(VERSION) .
 
 .PHONY: push-img
 push-img: img
