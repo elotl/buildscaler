@@ -1,4 +1,4 @@
-# Buildscaler 2
+# Buildscaler
 
 Built using [customer-metrics
 lib](https://github.com/kubernetes-sigs/custom-metrics-apiserver) A service
