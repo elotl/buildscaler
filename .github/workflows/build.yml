@@ -35,9 +35,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Lint
-        run: make verify-gofmt
+        run: make check
       - name: Build binary
-        run: make
+        run: make buildscaler
       - name: Test
         run: make test
       - name: Set VERSION
