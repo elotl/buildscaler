@@ -33,12 +33,12 @@ $(GOPATH)/bin/staticcheck:
 
 .PHONY: format
 format:
-	goimports -w $$(find . -type f -name '*.go' -not -path "./vendor/*")
+	go run golang.org/x/tools/cmd/goimports -w $$(find . -type f -name '*.go' -not -path "./vendor/*")
 
 .PHONY: check
 check: format
 	go vet ./...
-	staticcheck ./...
+	go run honnef.co/go/tools/cmd/staticcheck ./...
 
 .PHONY: verify
 verify: verify-deps check
