@@ -1,11 +1,14 @@
-# CI Platforms External Metrics
+# Buildscaler
 
-Built using [customer-metrics lib](https://github.com/kubernetes-sigs/custom-metrics-apiserver)
-A service meant to provide k8s External Metrics from CI providers API, which can be later used to configure autoscaling via Horizontal Pod Autoscalers.
+Built using [customer-metrics
+lib](https://github.com/kubernetes-sigs/custom-metrics-apiserver) A service
+meant to provide k8s External Metrics from CI providers API, which can be
+later used to configure autoscaling via Horizontal Pod Autoscalers.
 
-## Supported providers
+# Supported providers
 
-### Buildkite
+## Buildkite
+
 You have to set up `BUILDKITE_AGENT_TOKEN` env variable.
 
 Exported metrics (list of metrics can be queried via kubectl `$ kubectl get --raw="/apis/external.metrics.k8s.io/v1beta1/" -A  | jq -r ".resources[].name" | sort`
@@ -41,9 +44,13 @@ Querying specific metric for its value:
 
 Scraper provides Buildkite queue tag as a label for each metric.
 
-2. CircleCI
-You have to set up `CIRCLECI_TOKEN` & `CIRCLECI_PROJECT_SLUG`. Currently, CircleCI scraper supports only 1 project at the time, meaning that you need to have metrics about more projects, you need to run multiple deployments of `ciplatforms-external-metrics` with different env vars.
-Scraper takes into account only jobs from pipelines updated earlier than 30 minutes ago.
+## CircleCI
+
+You have to set up `CIRCLECI_TOKEN` & `CIRCLECI_PROJECT_SLUG`. Currently,
+CircleCI scraper supports only 1 project at the time, meaning that you need
+to have metrics about more projects, you need to run multiple deployments of
+`buildscaler` with different env vars.  Scraper takes into account only jobs
+from pipelines updated earlier than 30 minutes ago.
 
 Exported metrics:
 

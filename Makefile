@@ -1,9 +1,9 @@
 REGISTRY?=689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl-dev
-IMAGE?=ciplatforms-external-metrics
+IMAGE?=buildscaler
 TEMP_DIR:=$(shell mktemp -d)
 ARCH?=amd64
 OUT_DIR?=./_output
-BINARY_NAME=ciplatforms-external-metrics
+BINARY_NAME=buildscaler
 
 VERSION?=latest
 

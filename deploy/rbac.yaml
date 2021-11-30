@@ -13,7 +13,7 @@ roleRef:
   name: system:auth-delegator
 subjects:
 - kind: ServiceAccount
-  name: external-metrics-apiserver
+  name: buildscaler-apiserver
   namespace: external-metrics
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -27,26 +27,26 @@ roleRef:
   name: extension-apiserver-authentication-reader
 subjects:
 - kind: ServiceAccount
-  name: external-metrics-apiserver
+  name: buildscaler-apiserver
   namespace: external-metrics
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: external-metrics-resource-reader
+  name: buildscaler-resource-reader
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: external-metrics-resource-reader
+  name: buildscaler-resource-reader
 subjects:
 - kind: ServiceAccount
-  name: external-metrics-apiserver
+  name: buildscaler-apiserver
   namespace: external-metrics
 ---
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  name: external-metrics-apiserver
+  name: buildscaler-apiserver
   namespace: external-metrics
 ---
 apiVersion: rbac.authorization.k8s.io/v1

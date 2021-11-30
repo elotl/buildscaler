@@ -2,7 +2,7 @@ package collector
 
 import (
 	"context"
-	"github.com/elotl/ciplatforms-external-metrics/pkg/storage"
+	"github.com/elotl/buildscaler/pkg/storage"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"k8s.io/apimachinery/pkg/api/resource"

@@ -1,4 +1,4 @@
-module github.com/elotl/ciplatforms-external-metrics
+module github.com/elotl/buildscaler
 
 go 1.16
 
