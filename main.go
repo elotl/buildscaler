@@ -78,11 +78,13 @@ func main() {
 	ctx, cancel := context.WithCancel(signals.SetupSignalHandler())
 	defer cancel()
 
+	var serverDone = make(chan struct{})
 	go func() {
 		if err := adapter.Run(ctx.Done()); err != nil {
-			klog.Fatalf("unable to run metrics adapter: %v", err)
 			cancel()
+			klog.Fatalf("unable to run metrics adapter: %v", err)
 		}
+		close(serverDone)
 	}()
 
 	ticker := time.NewTicker(scrapePeriod)
@@ -94,6 +96,7 @@ func main() {
 		select {
 		case <-ctx.Done():
 			klog.Info("Finished.")
+			<-serverDone // Wait for metrics adapter to finish
 			return
 		case <-ticker.C:
 		}
