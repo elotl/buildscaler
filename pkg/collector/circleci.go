@@ -3,7 +3,7 @@ package collector
 import (
 	"context"
 	"encoding/json"
-	"github.com/elotl/ciplatforms-external-metrics/pkg/storage"
+	"github.com/elotl/buildscaler/pkg/storage"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -3,7 +3,7 @@ package ciprovider
 import (
 	"context"
 	"errors"
-	"github.com/elotl/ciplatforms-external-metrics/pkg/storage"
+	"github.com/elotl/buildscaler/pkg/storage"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/labels"

@@ -5,7 +5,7 @@ metadata:
   name: v1beta1.external.metrics.k8s.io
 spec:
   service:
-    name: external-metrics-apiserver
+    name: buildscaler-apiserver
     namespace: external-metrics
   group: external.metrics.k8s.io
   version: v1beta1

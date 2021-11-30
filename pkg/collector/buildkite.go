@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/elotl/ciplatforms-external-metrics/pkg/storage"
+	"github.com/elotl/buildscaler/pkg/storage"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
@@ -51,7 +51,7 @@ func NewBuildkiteCollector(storage *storage.ExternalMetricsMap, token, version s
 	return &BuildkiteCollector{
 		Endpoint:  "https://agent.buildkite.com/v3", // should we pass it from flags?
 		Token:     token,
-		UserAgent: "elotl-ciplatforms-external-metrics/" + version + " buildkite-metrics-collector",
+		UserAgent: "elotl-buildscaler/" + version + " buildkite-metrics-collector",
 		Queues:    queues,
 		Quiet:     false,
 		Debug:     false,

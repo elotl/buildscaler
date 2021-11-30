@@ -3,24 +3,24 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: external-metrics-apiserver
-  name: external-metrics-apiserver
+    app: buildscaler-apiserver
+  name: buildscaler-apiserver
   namespace: external-metrics
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: external-metrics-apiserver
+      app: buildscaler-apiserver
   template:
     metadata:
       labels:
-        app: external-metrics-apiserver
-      name: external-metrics-apiserver
+        app: buildscaler-apiserver
+      name: buildscaler-apiserver
     spec:
-      serviceAccountName: external-metrics-apiserver
+      serviceAccountName: buildscaler-apiserver
       containers:
-        - name: external-metrics-apiserver
-          image: 689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl/ciplatforms-external-metrics:v0.1.0
+        - name: buildscaler-apiserver
+          image: 689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl/buildscaler:v2.0.0
           imagePullPolicy: IfNotPresent
           args:
             - /adapter
