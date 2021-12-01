@@ -19,8 +19,8 @@ require (
 	golang.org/x/tools v0.1.7 // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
-	k8s.io/apimachinery v0.22.2
 	k8s.io/apiserver v0.22.2 // indirect
+	k8s.io/apimachinery v0.22.2
 	k8s.io/component-base v0.22.2
 	k8s.io/klog/v2 v2.10.0
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65
