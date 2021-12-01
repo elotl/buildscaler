@@ -1,4 +1,5 @@
 DOCKER=docker
+GOBIN?=$(go env GOBIN)
 REGISTRY?=689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl-dev
 IMAGE?=buildscaler
 BINARY_NAME=buildscaler
@@ -22,23 +23,24 @@ pkg/generated/openapi/zz_generated.openapi.go: go.mod go.sum
 	    -o ./ \
 	    -r /dev/null
 
-.PHONY: bootstrap
-bootstrap: $(GOPATH)/bin/goimports $(GOPATH)/bin/staticcheck
-
-$(GOPATH)/bin/goimports:
+$(GOBIN)/goimports:
 	go get golang.org/x/tools/cmd/goimports
+	go install golang.org/x/tools/cmd/goimports
 
-$(GOPATH)/bin/staticcheck:
-	go install honnef.co/go/tools/cmd/staticcheck@2021.1.2
+$(GOBIN)/golangci-lint:
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
-.PHONY: format
 format:
-	go run golang.org/x/tools/cmd/goimports -w $$(find . -type f -name '*.go' -not -path "./vendor/*")
+	$(GOBIN)/goimports -w $$(find . -type f -name '*.go' -not -path "./vendor/*")
 
-.PHONY: check
-check: format
+lint: $(GOBIN)/golangci-lint
 	go vet ./...
-	go run honnef.co/go/tools/cmd/staticcheck ./...
+	$(GOBIN)/golangci-lint run ./...
+
+check: format lint
+
+.PHONY: format lint check
 
 .PHONY: verify
 verify: verify-deps check
