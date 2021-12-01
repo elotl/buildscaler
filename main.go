@@ -4,17 +4,20 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/elotl/buildscaler/pkg/ciprovider"
-	"github.com/elotl/buildscaler/pkg/collector"
-	storagemap "github.com/elotl/buildscaler/pkg/storage"
-	"k8s.io/component-base/logs"
-	"k8s.io/klog/v2"
-	"k8s.io/metrics/pkg/apis/external_metrics"
 	"os"
-	"sigs.k8s.io/custom-metrics-apiserver/pkg/cmd"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/elotl/buildscaler/pkg/ciprovider"
+	"github.com/elotl/buildscaler/pkg/collector"
+	storagemap "github.com/elotl/buildscaler/pkg/storage"
+
+	"k8s.io/component-base/logs"
+	"k8s.io/klog/v2"
+	"k8s.io/metrics/pkg/apis/external_metrics"
+	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+	"sigs.k8s.io/custom-metrics-apiserver/pkg/cmd"
 )
 
 var (
@@ -29,7 +32,7 @@ var (
 
 func main() {
 	adapter := &cmd.AdapterBase{
-		Name: "ci-platforms-metrics-adapter",
+		Name: "buildscaler",
 	}
 	logs.InitLogs()
 	defer logs.FlushLogs()
@@ -71,40 +74,33 @@ func main() {
 	klog.V(2).Infof("using %s scraper & metrics provider", CIPlatform)
 	externalMetricsProvider := ciprovider.NewExternalMetricsProviderFromStorage(storage)
 	adapter.WithExternalMetrics(externalMetricsProvider)
-	ctx, cancel := context.WithCancel(context.Background())
+
+	ctx, cancel := context.WithCancel(signals.SetupSignalHandler())
 	defer cancel()
 
-	ticker := time.NewTicker(scrapePeriod)
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
+	var serverDone = make(chan struct{})
 	go func() {
 		if err := adapter.Run(ctx.Done()); err != nil {
-			klog.Fatalf("unable to run metrics adapter: %v", err)
-			wg.Done()
 			cancel()
+			klog.Fatalf("unable to run metrics adapter: %v", err)
 		}
-
+		close(serverDone)
 	}()
-	klog.V(2).Infof("server runs, let's start a scraper...")
-	wg.Add(1)
-	go func() {
-		for {
-			err := metricsCollector.Collect(cancel)
-			if err != nil {
-				klog.Errorf("error scraping metrics: %v", err)
-				cancel()
-			}
-			select {
-			case <-ctx.Done():
-				klog.V(3).Info("scraping finished.")
-				wg.Done()
-				return
-			case <-ticker.C:
-			}
+
+	ticker := time.NewTicker(scrapePeriod)
+	for {
+		err := metricsCollector.Collect(cancel)
+		if err != nil {
+			klog.Errorf("error scraping metrics: %s", err)
 		}
-	}()
-	wg.Wait()
-
+		select {
+		case <-ctx.Done():
+			klog.Info("Finished.")
+			<-serverDone // Wait for metrics adapter to finish
+			return
+		case <-ticker.C:
+		}
+	}
 }
 
 func GetBuildkiteTokenFromEnvOrDie() string {
