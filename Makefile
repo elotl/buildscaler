@@ -32,6 +32,7 @@ $(GOBIN)/golangci-lint:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
 format: $(GOBIN)/goimports
+	go env
 	$(GOBIN)/goimports -w $$(find . -type f -name '*.go' -not -path "./vendor/*")
 
 lint: $(GOBIN)/golangci-lint
