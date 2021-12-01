@@ -1,5 +1,5 @@
 DOCKER=docker
-GOBIN?=$(go env GOBIN)
+GOBIN=$(go env GOBIN)
 REGISTRY?=689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl-dev
 IMAGE?=buildscaler
 BINARY_NAME=buildscaler
@@ -31,7 +31,7 @@ $(GOBIN)/golangci-lint:
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
-format:
+format: $(GOBIN)/goimports
 	$(GOBIN)/goimports -w $$(find . -type f -name '*.go' -not -path "./vendor/*")
 
 lint: $(GOBIN)/golangci-lint
