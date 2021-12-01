@@ -138,6 +138,43 @@ type allMetricsResponse struct {
 	Organization organizationResponse     `json:"organization"`
 }
 
+func metricsToResult(allMetrics *allMetricsResponse, result *Result) {
+	klog.Infof("Found organization %q", allMetrics.Organization.Slug)
+	result.Org = allMetrics.Organization.Slug
+
+	result.Totals[ScheduledJobsCount] = allMetrics.Jobs.Scheduled
+	result.Totals[RunningJobsCount] = allMetrics.Jobs.Running
+	result.Totals[UnfinishedJobsCount] = allMetrics.Jobs.Total
+	result.Totals[WaitingJobsCount] = allMetrics.Jobs.Waiting
+	result.Totals[IdleAgentCount] = allMetrics.Agents.Idle
+	result.Totals[BusyAgentCount] = allMetrics.Agents.Busy
+	result.Totals[TotalAgentCount] = allMetrics.Agents.Total
+	result.Totals[BusyAgentPercentage] = busyAgentPercentage(allMetrics.Agents.metricsAgentsResponse)
+
+	for queueName, queueJobMetrics := range allMetrics.Jobs.Queues {
+		if _, ok := result.Queues[queueName]; !ok {
+			result.Queues[queueName] = map[string]int{}
+		}
+		result.Queues[queueName][ScheduledJobsCount] = queueJobMetrics.Scheduled
+		result.Queues[queueName][RunningJobsCount] = queueJobMetrics.Running
+		result.Queues[queueName][UnfinishedJobsCount] = queueJobMetrics.Total
+		result.Queues[queueName][WaitingJobsCount] = queueJobMetrics.Waiting
+	}
+
+	for queueName, queueAgentMetrics := range allMetrics.Agents.Queues {
+		if _, ok := result.Queues[queueName]; !ok {
+			result.Queues[queueName] = map[string]int{}
+		}
+		result.Queues[queueName][IdleAgentCount] = queueAgentMetrics.Idle
+		result.Queues[queueName][BusyAgentCount] = queueAgentMetrics.Busy
+		result.Queues[queueName][TotalAgentCount] = queueAgentMetrics.Total
+		result.Queues[queueName][BusyAgentPercentage] = busyAgentPercentage(queueAgentMetrics)
+	}
+}
+
+// XXX: this function is too big and complex. We should simplify it and remove
+// the nolint flag below.
+// nolint:cyclop
 func (c *BuildkiteCollector) collect() (*Result, error) {
 	result := &Result{
 		Totals: map[string]int{},
@@ -223,37 +260,8 @@ func (c *BuildkiteCollector) collect() (*Result, error) {
 			return nil, fmt.Errorf("no organization slug was found in the metrics response")
 		}
 
-		klog.Infof("Found organization %q", allMetrics.Organization.Slug)
-		result.Org = allMetrics.Organization.Slug
+		metricsToResult(&allMetrics, result)
 
-		result.Totals[ScheduledJobsCount] = allMetrics.Jobs.Scheduled
-		result.Totals[RunningJobsCount] = allMetrics.Jobs.Running
-		result.Totals[UnfinishedJobsCount] = allMetrics.Jobs.Total
-		result.Totals[WaitingJobsCount] = allMetrics.Jobs.Waiting
-		result.Totals[IdleAgentCount] = allMetrics.Agents.Idle
-		result.Totals[BusyAgentCount] = allMetrics.Agents.Busy
-		result.Totals[TotalAgentCount] = allMetrics.Agents.Total
-		result.Totals[BusyAgentPercentage] = busyAgentPercentage(allMetrics.Agents.metricsAgentsResponse)
-
-		for queueName, queueJobMetrics := range allMetrics.Jobs.Queues {
-			if _, ok := result.Queues[queueName]; !ok {
-				result.Queues[queueName] = map[string]int{}
-			}
-			result.Queues[queueName][ScheduledJobsCount] = queueJobMetrics.Scheduled
-			result.Queues[queueName][RunningJobsCount] = queueJobMetrics.Running
-			result.Queues[queueName][UnfinishedJobsCount] = queueJobMetrics.Total
-			result.Queues[queueName][WaitingJobsCount] = queueJobMetrics.Waiting
-		}
-
-		for queueName, queueAgentMetrics := range allMetrics.Agents.Queues {
-			if _, ok := result.Queues[queueName]; !ok {
-				result.Queues[queueName] = map[string]int{}
-			}
-			result.Queues[queueName][IdleAgentCount] = queueAgentMetrics.Idle
-			result.Queues[queueName][BusyAgentCount] = queueAgentMetrics.Busy
-			result.Queues[queueName][TotalAgentCount] = queueAgentMetrics.Total
-			result.Queues[queueName][BusyAgentPercentage] = busyAgentPercentage(queueAgentMetrics)
-		}
 	} else {
 		for _, queue := range c.Queues {
 			klog.V(5).Infof("Collecting agent metrics for queue '%s'", queue)
