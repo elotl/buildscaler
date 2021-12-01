@@ -30,6 +30,26 @@ var (
 	}
 )
 
+func createMetricCollector(ciPlatform string, storage *storagemap.ExternalMetricsMap) (collector.CIMetricsCollector, error) {
+	switch ciPlatform {
+	case CircleCIPlatform:
+		// TODO
+		token, projectSlug := GetCircleCIConfigFromEnvOrDie()
+		metricsCollector, err := collector.NewCircleCICollector(token, projectSlug, time.Minute*30, storage)
+		if err != nil {
+			klog.Errorf("cannot start CircleCI scraper: %s", err)
+			return nil, err
+		}
+		return metricsCollector, nil
+	case BuildkitePlatform:
+		token := GetBuildkiteTokenFromEnvOrDie()
+		queues := GetBuildkiteQueuesFromEnv()
+		return collector.NewBuildkiteCollector(storage, token, "v0.0.1", queues), nil
+	default:
+		return nil, fmt.Errorf("unknown ci platform: %s", ciPlatform)
+	}
+}
+
 func main() {
 	adapter := &cmd.AdapterBase{
 		Name: "buildscaler",
@@ -55,22 +75,11 @@ func main() {
 		RWMutex: rwm,
 		Data:    make(map[string]external_metrics.ExternalMetricValue),
 	}
-	var metricsCollector collector.CIMetricsCollector
-	switch CIPlatform {
-	case CircleCIPlatform:
-		// TODO
-		token, projectSlug := GetCircleCIConfigFromEnvOrDie()
-		metricsCollector, err = collector.NewCircleCICollector(token, projectSlug, time.Minute*30, storage)
-		if err != nil {
-			klog.Fatalf("cannot start CircleCI scraper: %v", err)
-		}
-	case BuildkitePlatform:
-		token := GetBuildkiteTokenFromEnvOrDie()
-		queues := GetBuildkiteQueuesFromEnv()
-		metricsCollector = collector.NewBuildkiteCollector(storage, token, "v0.0.1", queues)
-	default:
-		klog.Fatal("unknown ci platform")
+	metricsCollector, err := createMetricCollector(CIPlatform, storage)
+	if err != nil {
+		klog.Fatal(err)
 	}
+
 	klog.V(2).Infof("using %s scraper & metrics provider", CIPlatform)
 	externalMetricsProvider := ciprovider.NewExternalMetricsProviderFromStorage(storage)
 	adapter.WithExternalMetrics(externalMetricsProvider)

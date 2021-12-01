@@ -1,10 +1,11 @@
 package storage
 
 import (
+	"sync"
+
 	"k8s.io/klog/v2"
 	"k8s.io/metrics/pkg/apis/external_metrics"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/provider"
-	"sync"
 )
 
 type ExternalMetricsMap struct {
@@ -26,9 +27,7 @@ func (e *ExternalMetricsMap) OverrideOrStore(key string, value external_metrics.
 }
 
 func (e *ExternalMetricsMap) ListExternalMetricInfo() []provider.ExternalMetricInfo {
-	var (
-		metrics []provider.ExternalMetricInfo
-	)
+	metrics := make([]provider.ExternalMetricInfo, 0, len(e.Data))
 	e.RWMutex.RLock()
 	defer e.RWMutex.RUnlock()
 	for key := range e.Data {

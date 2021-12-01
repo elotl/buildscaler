@@ -3,15 +3,16 @@ package collector
 import (
 	"context"
 	"encoding/json"
-	"github.com/elotl/buildscaler/pkg/storage"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/api/resource"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/metrics/pkg/apis/external_metrics"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/elotl/buildscaler/pkg/storage"
+	"k8s.io/apimachinery/pkg/api/resource"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/metrics/pkg/apis/external_metrics"
 )
 
 const (
@@ -74,10 +75,12 @@ type CircleCIClient struct {
 }
 
 func (cc *CircleCIClient) doRequest(req *http.Request, nextPageToken string) (*http.Response, error) {
-	req.Header = make(map[string][]string, 0)
+	req.Header = make(map[string][]string)
 	req.Header.Set("Circle-Token", cc.token)
 	if nextPageToken != "" {
-		req.URL.Query().Add("Circle-Token", nextPageToken)
+		q := req.URL.Query()
+		q.Add("Circle-Token", nextPageToken)
+		req.URL.RawQuery = q.Encode()
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
@@ -89,10 +92,7 @@ func isPipelineTooOld(pipeline *ProjectPipeline, maxAge time.Duration) bool {
 	return pipeline.UpdatedAt.Before(ageThreshold)
 }
 
-func (cc *CircleCIClient) listProjectPipelines(maxAge time.Duration) ([]ProjectPipeline, error) {
-	var (
-		projectPipelines []ProjectPipeline
-	)
+func (cc *CircleCIClient) request() (*PaginatedProjectPipeline, error) {
 	req := &http.Request{
 		Method: "GET",
 		URL:    cc.pipelinesURL,
@@ -101,9 +101,10 @@ func (cc *CircleCIClient) listProjectPipelines(maxAge time.Duration) ([]ProjectP
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
+
 	var paginatedResp PaginatedProjectPipeline
 	payload, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +112,17 @@ func (cc *CircleCIClient) listProjectPipelines(maxAge time.Duration) ([]ProjectP
 	if err != nil {
 		return nil, err
 	}
+	return &paginatedResp, nil
+}
+
+func (cc *CircleCIClient) listProjectPipelines(maxAge time.Duration) ([]ProjectPipeline, error) {
+	projectPipelines := make([]ProjectPipeline, 0)
+
+	var paginatedResp, err = cc.request()
+	if err != nil {
+		return nil, err
+	}
+
 	nextToken := paginatedResp.NextPageToken
 	tooOld := false
 	for _, pipeline := range paginatedResp.Items {
@@ -124,20 +136,11 @@ func (cc *CircleCIClient) listProjectPipelines(maxAge time.Duration) ([]ProjectP
 		return projectPipelines, nil
 	}
 	for nextToken != "" {
-		resp, err := cc.doRequest(req, nextToken)
+		paginatedResp, err = cc.request()
 		if err != nil {
 			return nil, err
 		}
-		var paginatedResp PaginatedProjectPipeline
-		payload, err := ioutil.ReadAll(resp.Body)
-		defer resp.Body.Close()
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(payload, &paginatedResp)
-		if err != nil {
-			return nil, err
-		}
+
 		for _, pipeline := range paginatedResp.Items {
 			if isPipelineTooOld(&pipeline, maxAge) {
 				tooOld = true
@@ -184,6 +187,9 @@ func (cc *CircleCIClient) listPipelineWorkflows(pipelineID string) ([]PipelineWo
 
 	}
 	nextToken, workflows, err := cc.doListPipelineWorkflowsReq(workflowsURL, "")
+	if err != nil {
+		return nil, err
+	}
 	pipelinesWorkflows = append(pipelinesWorkflows, workflows...)
 	for nextToken != "" {
 		newNextToken, workflows, err := cc.doListPipelineWorkflowsReq(workflowsURL, nextToken)

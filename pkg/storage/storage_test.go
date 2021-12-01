@@ -1,12 +1,13 @@
 package storage
 
 import (
+	"sync"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/metrics/pkg/apis/external_metrics"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/provider"
-	"sync"
-	"testing"
 )
 
 func TestExternalMetricsMap_OverrideOrStore(t *testing.T) {

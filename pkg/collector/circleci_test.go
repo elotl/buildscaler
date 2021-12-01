@@ -2,17 +2,18 @@ package collector
 
 import (
 	"context"
-	"github.com/elotl/buildscaler/pkg/storage"
-	"github.com/stretchr/testify/assert"
 	"io"
-	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/metrics/pkg/apis/external_metrics"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/elotl/buildscaler/pkg/storage"
+	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/metrics/pkg/apis/external_metrics"
 )
 
 func TestCircleCIScraper_Scrape(t *testing.T) {
