@@ -20,6 +20,9 @@ LABEL "Owner"="Elotl Inc."
 LABEL "Description"="Buildscaler: CI platform integration for Kubernetes"
 
 ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y && \
+        apt-get upgrade -y && \
+        apt-get install -y ca-certificates
 
 COPY --from=builder /build/buildscaler .
 
