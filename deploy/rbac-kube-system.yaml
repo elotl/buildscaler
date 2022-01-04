@@ -9,7 +9,7 @@ roleRef:
   name: extension-apiserver-authentication-reader
 subjects:
 - kind: ServiceAccount
-  name: external-metrics-apiserver
+  name: buildscaler-apiserver
   namespace: external-metrics
 ---
 apiVersion: rbac.authorization.k8s.io/v1
