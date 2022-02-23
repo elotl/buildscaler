@@ -15,6 +15,8 @@ import (
 func TestFlarebuildBasic(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, r.URL.Path, "/remote_executions/queues")
+		assert.Equal(t, r.Header["User-Agent"], []string{"buildscaler"})
+		assert.Equal(t, r.Header["Accept"], []string{"application/json"})
 		assert.Equal(t, r.Header["X-Api-Key"], []string{"fakeauth"})
 		w.WriteHeader(http.StatusOK)
 		_, _ = io.WriteString(w, `{"queueInfo": [
