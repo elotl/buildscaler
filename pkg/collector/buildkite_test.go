@@ -25,6 +25,7 @@ func TestCollectorWithEmptyResponseForAllQueues(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		}
 	}))
+	defer s.Close()
 	c := &BuildkiteCollector{
 		Endpoint:  s.URL,
 		Token:     "abc123",
