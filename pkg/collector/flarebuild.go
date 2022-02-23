@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"strings"
 	"time"
 
@@ -21,7 +19,7 @@ import (
 type v1QueueInfo struct {
 	OsFamily       string `json:"osFamily"`
 	ContainerImage string `json:"containerImage"`
-	Runner         int64  `json:"runner,string"`
+	Runner         int64  `json:"runners,string"`
 	QueueSize      int64  `json:"queueSize,string"`
 }
 
@@ -56,22 +54,15 @@ func (c *Flarebuild) collect() (
 	result []v1QueueInfo,
 	err error,
 ) {
-	if dump, err := httputil.DumpRequest(c.request, true); err == nil {
-		klog.V(0).Infof("DEBUG request uri=%s\n%s\n", c.request.URL, dump)
-	}
 	var response *http.Response
-	client := &http.Client{Timeout: 60 * time.Second}
-	response, err = client.Do(c.request)
+	response, err = c.client.Do(c.request.Clone(context.TODO()))
 	if err != nil {
-		urlError, ok := err.(*url.Error)
-		if ok {
-			fmt.Printf("%#v\n", urlError)
-		}
-		fmt.Printf("%#v\n", err.Error())
+		klog.Error("unable to query flare.build: %s", err)
 		return
 	}
+	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("error querying flare.build, http code: %d", response.StatusCode)
+		err = fmt.Errorf("bad http code: %d", response.StatusCode)
 		return
 	}
 	var doc v1QueueInfoDocument
@@ -79,15 +70,12 @@ func (c *Flarebuild) collect() (
 		return
 	}
 	result = doc.QueueInfo
-	err = response.Body.Close()
 	return
 }
 
 func flarebuildMetricName(os, name string) string {
 	return fmt.Sprintf(
-		"flarebuild_%s_%s",
-		strings.ToLower(os),
-		strings.ToLower(name),
+		"flarebuild_%s_%s", strings.ToLower(os), strings.ToLower(name),
 	)
 }
 
@@ -105,6 +93,7 @@ func flarebuildExternalMetricValue(
 func (c *Flarebuild) Collect(cancel context.CancelFunc) error {
 	var queues, err = c.collect()
 	if err != nil {
+		klog.ErrorS(err, "failed to collect data")
 		cancel()
 		return err
 	}
