@@ -19,12 +19,14 @@ import (
 )
 
 var (
-	BuildkitePlatform = "buildkite"
-	CircleCIPlatform  = "circleci"
+	BuildkitePlatform  = "buildkite"
+	CircleCIPlatform   = "circleci"
+	FlarebuildPlatform = "flarebuild"
 
 	CIPlatforms = []string{
 		BuildkitePlatform,
 		CircleCIPlatform,
+		FlarebuildPlatform,
 	}
 )
 
@@ -43,6 +45,9 @@ func createMetricCollector(ciPlatform string, storage *storagemap.ExternalMetric
 		token := GetBuildkiteTokenFromEnvOrDie()
 		queues := GetBuildkiteQueuesFromEnv()
 		return collector.NewBuildkiteCollector(storage, token, "v0.0.1", queues), nil
+	case FlarebuildPlatform:
+		var apiKey, endpoint = GetFlarebuildConfigFromEnvOrDie()
+		return collector.NewFlarebuild(storage, apiKey, endpoint)
 	default:
 		return nil, fmt.Errorf("unknown ci platform: %s", ciPlatform)
 	}
@@ -133,4 +138,17 @@ func GetCircleCIConfigFromEnvOrDie() (string, string) {
 		klog.Fatalf("cannot get CircleCI project slug from CIRCLECI_PROJECT_SLUG en var")
 	}
 	return token, projectSlug
+}
+
+func GetFlarebuildConfigFromEnvOrDie() (string, string) {
+	var apiKey = os.Getenv("FLAREBUILD_API_KEY")
+	if apiKey == "" {
+		klog.Fatal("environment variable FLAREBUILD_API_KEY not set")
+	}
+	var endpoint = os.Getenv("FLAREBUILD_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "https://api.stg.flare.build/api/v1"
+	}
+	klog.V(2).Infof("using %s as endpoint", endpoint)
+	return apiKey, endpoint
 }
