@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/elotl/buildscaler/pkg/ciprovider"
@@ -15,7 +14,6 @@ import (
 
 	"k8s.io/component-base/logs"
 	"k8s.io/klog/v2"
-	"k8s.io/metrics/pkg/apis/external_metrics"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/cmd"
 )
@@ -70,11 +68,7 @@ func main() {
 	if err != nil {
 		klog.Fatal(err)
 	}
-	rwm := &sync.RWMutex{}
-	storage := &storagemap.ExternalMetricsMap{
-		RWMutex: rwm,
-		Data:    make(map[string]external_metrics.ExternalMetricValue),
-	}
+	storage := storagemap.NewExternalMetricsMap()
 	metricsCollector, err := createMetricCollector(CIPlatform, storage)
 	if err != nil {
 		klog.Fatal(err)

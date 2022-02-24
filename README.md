@@ -68,4 +68,15 @@ Exported metrics:
 | circleci_jobs_running | jobs with status "running" |
 | circleci_jobs_waiting | jobs with status "waiting" |
 
+## Flare.build
 
+Set up `FLAREBUILD_API_KEY`. One metric per os/image combo. There may therefor
+be multiple flarebuild_linux_runners metrics due to multiple linux images begin
+run.
+
+Exported metrics:
+
+| Metric name | Description |
+| ----------- | ----------- |
+| `flarebuild_<os>_runners` | Number of runners for this os/image combo |
+| `flarebuild_<os>_queue_size` | Queue size for this os/image combo |

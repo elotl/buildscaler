@@ -13,6 +13,13 @@ type ExternalMetricsMap struct {
 	Data    map[string]external_metrics.ExternalMetricValue
 }
 
+func NewExternalMetricsMap() *ExternalMetricsMap {
+	return &ExternalMetricsMap{
+		RWMutex: &sync.RWMutex{},
+		Data:    make(map[string]external_metrics.ExternalMetricValue),
+	}
+}
+
 func (e *ExternalMetricsMap) OverrideOrStore(key string, value external_metrics.ExternalMetricValue) {
 	e.RWMutex.Lock()
 	defer e.RWMutex.Unlock()
