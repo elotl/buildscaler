@@ -39,16 +39,16 @@ Querying specific metric for its value:
 }
 ```
 
-| Metric name | Description |
-| ----------- | ----------- |
-| buildkite_busy_agent_count | ... |
-| buildkite_busy_agent_percentage | ... |
-| buildkite_idle_agent_count | ... |
-| buildkite_running_jobs_count | ... |
-| buildkite_scheduled_jobs_count | ... |
-| buildkite_total_agent_count | ... |
-| buildkite_unfinished_jobs_count | ... |
-| buildkite_waiting_jobs_count | ... |
+| Metric name                     | Description |
+|---------------------------------|-------------|
+| buildkite_busy_agent_count      | ...         |
+| buildkite_busy_agent_percentage | ...         |
+| buildkite_idle_agent_count      | ...         |
+| buildkite_running_jobs_count    | ...         |
+| buildkite_scheduled_jobs_count  | ...         |
+| buildkite_total_agent_count     | ...         |
+| buildkite_unfinished_jobs_count | ...         |
+| buildkite_waiting_jobs_count    | ...         |
 
 Scraper provides Buildkite queue tag as a label for each metric.
 
@@ -62,9 +62,9 @@ from pipelines updated earlier than 30 minutes ago.
 
 Exported metrics:
 
-| Metric name | Description |
-| ----------- | ----------- |
-| circleci_jobs_failed | jobs with status "failed" |
+| Metric name           | Description                |
+|-----------------------|----------------------------|
+| circleci_jobs_failed  | jobs with status "failed"  |
 | circleci_jobs_running | jobs with status "running" |
 | circleci_jobs_waiting | jobs with status "waiting" |
 
@@ -76,7 +76,14 @@ run.
 
 Exported metrics:
 
-| Metric name | Description |
-| ----------- | ----------- |
-| `flarebuild_<os>_runners` | Number of runners for this os/image combo |
-| `flarebuild_<os>_queue_size` | Queue size for this os/image combo |
+| Metric name                  | Description                               |
+|------------------------------|-------------------------------------------|
+| `flarebuild_<os>_runners`    | Number of runners for this os/image combo |
+| `flarebuild_<os>_queue_size` | Queue size for this os/image combo        |
+
+
+# Deployment
+
+1. Edit a following lines in [deployment.yaml](deploy/deployment.yaml): ` --ci-platform=circleci` <- set to buildkite/circleci
+2. Add environment variables mentioned in a section above about your CI provider.
+3. Run `kubectl apply -f deploy/*.yaml`
