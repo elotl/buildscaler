@@ -6,8 +6,6 @@ on:
       - v*
 
 env:
-  AWS_REGION: us-east-1
-  AWS_DEFAULT_REGION: us-east-1
   ECR_REPO: elotl/buildscaler
   DOCKERHUB_REPO: elotl/buildscaler-dev
 name: Build and test
@@ -54,12 +52,6 @@ jobs:
         name: Create k8s Kind Cluster
         with:
           cluster_name: 'buildscaler-smoke-test'
-      - uses: aws-actions/setup-sam@v1
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
 
       - name: Smoke test
         run: |
@@ -93,8 +85,6 @@ jobs:
             exit 1;
           fi
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
           BUILDKITE_AGENT_TOKEN: ${{ secrets.BUILDKITE_AGENT_TOKEN }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}

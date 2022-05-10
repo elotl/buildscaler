@@ -2,10 +2,6 @@ on:
   push:
     tags: v*
 
-env:
-  AWS_REGION: us-east-1
-  AWS_DEFAULT_REGION: us-east-1
-
 name: Release
 jobs:
   build:
@@ -46,4 +42,7 @@ jobs:
 
       - name: Release image
         run: make release-img VERSION=${{ steps.set_version.outputs.VERSION }}
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
