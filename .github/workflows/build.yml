@@ -66,7 +66,7 @@ jobs:
           BUILDSCALER_IMAGE=$DOCKERHUB_REPO:${{ steps.set_version.outputs.VERSION }} envsubst < deploy/buildkite-deployment.yaml > deploy/bk-deploy.yaml
           cat deploy/bk-deploy.yaml
           kubectl create namespace external-metrics
-          kubectl create secret docker-registry regcred --docker-server=689494258501.dkr.ecr.us-east-1.amazonaws.com --docker-username=AWS --docker-password=$(aws ecr get-login-password) --namespace=external-metrics
+          kubectl create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username=$DOCKER_USERNAME --docker-password=$DOCKER_PASSWORD --docker-email=dev@elotl.co--namespace=external-metrics
           kubectl create secret generic --namespace=external-metrics buildkite-secrets --from-literal=BUILDKITE_AGENT_TOKEN=$BUILDKITE_AGENT_TOKEN
           kubectl get secret -n external-metrics buildkite-secrets -o yaml
           kubectl apply -f deploy/rbac.yaml
@@ -96,3 +96,5 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
           BUILDKITE_AGENT_TOKEN: ${{ secrets.BUILDKITE_AGENT_TOKEN }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
