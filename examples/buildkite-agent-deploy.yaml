@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buildkite-agent
+  namespace: external-metrics
+  labels:
+    app: buildkite-agent
+spec:
+  selector:
+    matchLabels:
+      app: buildkite-agent
+  template:
+    metadata:
+      labels:
+        app: buildkite-agent
+    spec:
+      containers:
+        - name: buildkite-agent
+          image: buildkite/agent:3
+          envFrom:
+            - secretRef:
+                name: buildkite-secrets
+          env:
+            - name: BUILDKITE_AGENT_TAGS
+              value: queue=test
