@@ -52,6 +52,19 @@ Querying specific metric for its value:
 
 Scraper provides Buildkite queue tag as a label for each metric.
 
+### Installation for Buildkite
+
+1. Set `BUILDKITE_AGENT_TOKEN` environment variable.
+2. Create external-metrics namespace in your cluster `kubectl create namespace external-metrics`
+3. Create a secret with your BUILDKITE_AGENT_TOKEN: `kubectl create secret generic --namespace=external-metrics buildkite-secrets --from-literal=BUILDKITE_AGENT_TOKEN=$BUILDKITE_AGENT_TOKEN`
+
+
+    $ kubectl apply -f deploy/rbac.yaml
+      kubectl apply -f deploy/rbac-kube-system.yaml
+      kubectl apply -f deploy/builldkite-deployment.yaml
+      kubectl apply -f deploy/service.yaml
+      kubectl apply -f deploy/apiservice.yaml
+
 ## CircleCI
 
 You have to set up `CIRCLECI_TOKEN` & `CIRCLECI_PROJECT_SLUG`. Currently,

@@ -55,7 +55,7 @@ jobs:
 
       - name: Smoke test
         run: |
-          BUILDSCALER_IMAGE=$DOCKERHUB_REPO:${{ steps.set_version.outputs.VERSION }} envsubst < deploy/buildkite-deployment.yaml > deploy/bk-deploy.yaml
+          BUILDSCALER_IMAGE=$DOCKERHUB_REPO:${{ steps.set_version.outputs.VERSION }} envsubst < deploy/buildkite-deployment.yaml.template > deploy/bk-deploy.yaml
           cat deploy/bk-deploy.yaml
           kubectl create namespace external-metrics
           kubectl create secret docker-registry --namespace=external-metrics regcred --docker-server=https://index.docker.io/v1/ --docker-username=$DOCKER_USERNAME --docker-password=$DOCKER_PASSWORD --docker-email=dev@elotl.co

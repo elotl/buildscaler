@@ -20,7 +20,7 @@ spec:
       serviceAccountName: buildscaler-apiserver
       containers:
         - name: buildscaler-apiserver
-          image: elotl/buildscaler:v2.2.0
+          image: $BUILDSCALER_IMAGE
           imagePullPolicy: IfNotPresent
           args:
             - /buildscaler
