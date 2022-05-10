@@ -66,7 +66,7 @@ jobs:
           BUILDSCALER_IMAGE=$DOCKERHUB_REPO:${{ steps.set_version.outputs.VERSION }} envsubst < deploy/buildkite-deployment.yaml > deploy/bk-deploy.yaml
           cat deploy/bk-deploy.yaml
           kubectl create namespace external-metrics
-          kubectl create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username=$DOCKER_USERNAME --docker-password=$DOCKER_PASSWORD --docker-email=dev@elotl.co--namespace=external-metrics
+          kubectl create secret docker-registry --namespace=external-metrics regcred --docker-server=https://index.docker.io/v1/ --docker-username=$DOCKER_USERNAME --docker-password=$DOCKER_PASSWORD --docker-email=dev@elotl.co
           kubectl create secret generic --namespace=external-metrics buildkite-secrets --from-literal=BUILDKITE_AGENT_TOKEN=$BUILDKITE_AGENT_TOKEN
           kubectl get secret -n external-metrics buildkite-secrets -o yaml
           kubectl apply -f deploy/rbac.yaml
