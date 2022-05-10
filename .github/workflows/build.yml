@@ -49,8 +49,6 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Push image
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: make push-img VERSION=${{ steps.set_version.outputs.VERSION }}
       - uses: helm/kind-action@v1.2.0
         name: Create k8s Kind Cluster
