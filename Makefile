@@ -1,6 +1,7 @@
 DOCKER=docker
-REGISTRY?=689494258501.dkr.ecr.us-east-1.amazonaws.com/elotl-dev
-IMAGE?=buildscaler
+REGISTRY?=elotl
+REPO?=buildscaler-dev
+RELEASE_REPO?=buildscaler
 BINARY_NAME=buildscaler
 
 VERSION=$(shell git describe --dirty)
@@ -57,11 +58,15 @@ test:
 
 .PHONY: img
 img:
-	$(DOCKER) build -t $(REGISTRY)/$(IMAGE):$(VERSION) .
+	$(DOCKER) build -t $(REGISTRY)/$(REPO):$(VERSION) .
 
 .PHONY: push-img
 push-img: img
-	docker push $(REGISTRY)/$(IMAGE):$(VERSION)
+	docker push $(REGISTRY)/$(REPO):$(VERSION)
+
+release-img: img
+	$(DOCKER) tag $(REGISTRY)/$(REPO):$(VERSION) $(REGISTRY)/$(RELEASE_REPO):$(VERSION)
+	$(DOCKER) push $(REGISTRY)/$(RELEASE_REPO):$(VERSION)
 
 .PHONY: clean
 	-rm -f $(BINARY_NAME)
