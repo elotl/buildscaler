@@ -83,6 +83,7 @@ jobs:
           else
             kubectl describe -n external-metrics deploy/buildscaler-apiserver
             echo "Smoke test failed.\n"
+            echo "Metrics count: " $METRICS_COUNT
             exit 1;
           fi
         env:
