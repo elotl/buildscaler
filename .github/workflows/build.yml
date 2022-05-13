@@ -76,13 +76,14 @@ jobs:
           sleep 10
           kubectl api-resources
           kubectl get --raw="/apis/external.metrics.k8s.io/v1beta1/" -A |  grep "buildkite_total"
-          export METRICS_COUNT=$(kubectl get --raw="/apis/external.metrics.k8s.io/v1beta1/" -A | jq -r ".resources[].name" | grep "buildkite_total" -c)
-          if [ $METRICS_COUNT = "8" ]; then
+          METRICS_COUNT=$(kubectl get --raw="/apis/external.metrics.k8s.io/v1beta1/" -A | jq -r ".resources[].name" | grep "buildkite_" -c)
+          if [ $METRICS_COUNT = "12" ]; then
             echo "Smoke test passed.\n"
             exit 0;
           else
             kubectl describe -n external-metrics deploy/buildscaler-apiserver
             echo "Smoke test failed.\n"
+            echo "Metrics count: " $METRICS_COUNT
             exit 1;
           fi
         env:
