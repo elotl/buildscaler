@@ -67,6 +67,9 @@ Scraper provides Buildkite queue tag as a label for each metric.
       kubectl apply -f deploy/service.yaml
       kubectl apply -f deploy/apiservice.yaml
 
+### Usage for Buildkite
+You can use our [manifests](examples/buildkite) as a good starting point for deploying your Buildkite Agent deployment and HPA.
+
 ## CircleCI
 
 You have to set up `CIRCLECI_TOKEN` & `CIRCLECI_PROJECT_SLUG`. Currently,

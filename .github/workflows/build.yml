@@ -41,7 +41,7 @@ jobs:
         id: set_version
         run: echo ::set-output name=VERSION::$(git describe --dirty --tags)
       - name: Log into Dockerhub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -77,7 +77,7 @@ jobs:
           kubectl api-resources
           kubectl get --raw="/apis/external.metrics.k8s.io/v1beta1/" -A |  grep "buildkite_total"
           METRICS_COUNT=$(kubectl get --raw="/apis/external.metrics.k8s.io/v1beta1/" -A | jq -r ".resources[].name" | grep "buildkite_" -c)
-          if [ $METRICS_COUNT = "12" ]; then
+          if [ $METRICS_COUNT -ge 8 ]; then
             echo "Smoke test passed.\n"
             exit 0;
           else
