@@ -23,6 +23,7 @@ later used to configure autoscaling via Horizontal Pod Autoscalers.
 2. Create external-metrics namespace in your cluster `kubectl create namespace external-metrics`
 3. Create a secret with your BUILDKITE_AGENT_TOKEN: `kubectl create secret generic --namespace=external-metrics buildkite-secrets --from-literal=BUILDKITE_AGENT_TOKEN=$BUILDKITE_AGENT_TOKEN`
 
+Run:
 
     $ kubectl apply -f deploy/rbac.yaml
     $ kubectl apply -f deploy/rbac-kube-system.yaml
