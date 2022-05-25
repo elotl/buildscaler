@@ -9,21 +9,52 @@ later used to configure autoscaling via Horizontal Pod Autoscalers.
 
 # Requirements
 
-[goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) &
-[staticcheck](https://staticcheck.io/docs/):
+[golangci-lint](https://golangci-lint.run/)
 
-    $ go get golang.org/x/tools/cmd/goimports
-    $ go install honnef.co/go/tools/cmd/staticcheck@latest
+    $ go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
 
 # Supported providers
 
 ## Buildkite
 
-Please set up `BUILDKITE_AGENT_TOKEN` env variable.
+### Installation for Buildkite
 
-Exported metrics (list of metrics can be queried via kubectl `$ kubectl get --raw="/apis/external.metrics.k8s.io/v1beta1/" -A  | jq -r ".resources[].name" | sort`
-Querying specific metric for its value: 
-`$ kubectl get --raw="/apis/external.metrics.k8s.io/v1beta1/namespaces/external-metrics/buildkite_waiting_jobs_count" -A  | jq` 
+1. Set `BUILDKITE_AGENT_TOKEN` environment variable.
+2. Create external-metrics namespace in your cluster `kubectl create namespace external-metrics`
+3. Create a secret with your BUILDKITE_AGENT_TOKEN: `kubectl create secret generic --namespace=external-metrics buildkite-secrets --from-literal=BUILDKITE_AGENT_TOKEN=$BUILDKITE_AGENT_TOKEN`
+
+
+    $ kubectl apply -f deploy/rbac.yaml
+    $ kubectl apply -f deploy/rbac-kube-system.yaml
+    $ kubectl apply -f deploy/builldkite-deployment.yaml
+    $ kubectl apply -f deploy/service.yaml
+    $ kubectl apply -f deploy/apiservice.yaml
+
+### Usage for Buildkite
+You can use our [manifests](examples/buildkite) as a good starting point for deploying your Buildkite Agent deployment and using exported metrics in HorizontalPodAutoscaler.
+
+List of exported metrics:
+
+| Metric name                     | Description                       |
+|---------------------------------|-----------------------------------|
+| buildkite_busy_agent_count      | Number of busy agents             |
+| buildkite_busy_agent_percentage | Percentage of busy agents         |
+| buildkite_idle_agent_count      | Number of idle agents             |
+| buildkite_running_jobs_count    | Number of currently running jobs  |
+| buildkite_scheduled_jobs_count  | Number of scheduled jobs          |
+| buildkite_total_agent_count     | Total number of agents connected  |
+| buildkite_unfinished_jobs_count | Number of unfinished jobs.        |
+| buildkite_waiting_jobs_count    | Number of jobs waiting in a queue |
+
+Scraper provides Buildkite queue tag as a label for each metric.
+
+To get a list of exported metrics, you can use following kubectl command:
+
+    $ kubectl get --raw="/apis/external.metrics.k8s.io/v1beta1/" -A  | jq -r ".resources[].name" | sort
+
+To get specific metric details:
+
+    $ kubectl get --raw="/apis/external.metrics.k8s.io/v1beta1/namespaces/external-metrics/buildkite_waiting_jobs_count" -A  | jq
 ```bash{
   "kind": "ExternalMetricValueList",
   "apiVersion": "external.metrics.k8s.io/v1beta1",
@@ -41,34 +72,7 @@ Querying specific metric for its value:
 }
 ```
 
-| Metric name                     | Description |
-|---------------------------------|-------------|
-| buildkite_busy_agent_count      | ...         |
-| buildkite_busy_agent_percentage | ...         |
-| buildkite_idle_agent_count      | ...         |
-| buildkite_running_jobs_count    | ...         |
-| buildkite_scheduled_jobs_count  | ...         |
-| buildkite_total_agent_count     | ...         |
-| buildkite_unfinished_jobs_count | ...         |
-| buildkite_waiting_jobs_count    | ...         |
-
-Scraper provides Buildkite queue tag as a label for each metric.
-
-### Installation for Buildkite
-
-1. Set `BUILDKITE_AGENT_TOKEN` environment variable.
-2. Create external-metrics namespace in your cluster `kubectl create namespace external-metrics`
-3. Create a secret with your BUILDKITE_AGENT_TOKEN: `kubectl create secret generic --namespace=external-metrics buildkite-secrets --from-literal=BUILDKITE_AGENT_TOKEN=$BUILDKITE_AGENT_TOKEN`
-
-
-    $ kubectl apply -f deploy/rbac.yaml
-      kubectl apply -f deploy/rbac-kube-system.yaml
-      kubectl apply -f deploy/builldkite-deployment.yaml
-      kubectl apply -f deploy/service.yaml
-      kubectl apply -f deploy/apiservice.yaml
-
-### Usage for Buildkite
-You can use our [manifests](examples/buildkite) as a good starting point for deploying your Buildkite Agent deployment and HPA.
+Additional information about data exposed by Buildkite can be found [here](https://buildkite.com/docs/apis/agent-api/metrics). Buildscaler is using https://agent.buildkite.com/v3/metrics endpoint as a data source.
 
 ## CircleCI
 
