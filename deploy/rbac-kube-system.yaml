@@ -10,7 +10,6 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: buildscaler-apiserver
-  namespace: external-metrics
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
