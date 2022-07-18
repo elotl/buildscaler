@@ -14,7 +14,7 @@ $(BINARY_NAME): pkg/generated/openapi/zz_generated.openapi.go main.go
 	go build -o $(BINARY_NAME) main.go
 
 pkg/generated/openapi/zz_generated.openapi.go: go.mod go.sum
-	go install -mod=readonly k8s.io/kube-openapi/cmd/openapi-gen
+	go install -mod=readonly k8s.io/kube-openapi/cmd/openapi-gen@v0.0.0-20211115234752-e816edb12b65
 	$(GOPATH)/bin/openapi-gen --logtostderr \
 	    -i k8s.io/metrics/pkg/apis/custom_metrics,k8s.io/metrics/pkg/apis/custom_metrics/v1beta1,k8s.io/metrics/pkg/apis/custom_metrics/v1beta2,k8s.io/metrics/pkg/apis/external_metrics,k8s.io/metrics/pkg/apis/external_metrics/v1beta1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/api/resource,k8s.io/apimachinery/pkg/version,k8s.io/api/core/v1 \
 	    -h ./openapi-gen-header.go.template \
