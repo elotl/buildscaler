@@ -58,7 +58,7 @@ jobs:
           kubectl create namespace external-metrics
           kubectl create secret docker-registry --namespace=external-metrics regcred --docker-server=https://index.docker.io/v1/ --docker-username=$DOCKER_USERNAME --docker-password=$DOCKER_PASSWORD --docker-email=dev@elotl.co
           kubectl create secret generic --namespace=external-metrics buildkite-agent --from-literal=token=$BUILDKITE_AGENT_TOKEN
-          kubectl get secret -n external-metrics buildkite-secrets -o yaml
+          kubectl get secret -n external-metrics buildkite-agent -o yaml
           (cd deploy; dash -ex ./deploy.sh external-metrics)
           kubectl patch serviceaccount -n external-metrics buildscaler-apiserver -p '{"imagePullSecrets": [{"name": "regcred"}]}'
           kubectl describe -n external-metrics deploy/buildscaler-apiserver
