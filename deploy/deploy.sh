@@ -10,6 +10,12 @@ then
     exit 1
 fi
 
+kubectl --namespace "$namespace" get secret buildkite-agent || {
+    echo "secret/buildkite-agent not found in namespace $namespace"
+    echo "To create it: kubectl --namespace=$namespace create secret generic buildkite-agent --from-literal=token=<Buildkite Agent Token>"
+    exit 1
+}
+
 kubectl --namespace kube-system apply -f rbac-kube-system.yaml
 
 kubectl_apply() {
