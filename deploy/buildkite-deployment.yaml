@@ -27,9 +27,12 @@ spec:
             - --logtostderr=true
             - --v=6
             - --ci-platform=buildkite
-          envFrom:
-            - secretRef:
-                name: buildkite-secrets
+          env:
+            - name: BUILDKITE_AGENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: buildkite-agent
+                  key: token
           ports:
             - containerPort: 6443
               name: https
