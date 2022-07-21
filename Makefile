@@ -4,7 +4,7 @@ REPO?=buildscaler-dev
 RELEASE_REPO?=buildscaler
 BINARY_NAME=buildscaler
 
-VERSION=$(shell git describe --dirty)
+VERSION=$(shell git describe --tags --dirty)
 
 .PHONY: all
 all: $(BINARY_NAME)
