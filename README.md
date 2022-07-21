@@ -17,21 +17,30 @@ later used to configure autoscaling via Horizontal Pod Autoscalers.
 
 ## Buildkite
 
-### Installation for Buildkite
+### Install
 
-1. Set `BUILDKITE_AGENT_TOKEN` environment variable.
-2. Create external-metrics namespace in your cluster `kubectl create namespace external-metrics`
-3. Create a secret with your BUILDKITE_AGENT_TOKEN: `kubectl create secret generic --namespace=external-metrics buildkite-secrets --from-literal=BUILDKITE_AGENT_TOKEN=$BUILDKITE_AGENT_TOKEN`
+Requirements:
 
-Run:
+1. kubectl pointed at the cluster you want to deploy buildscaler on
+2. A namespace where you’ll deploy buildscaler. You can create it like this
+   `kubectl create namespace external-metrics`.
 
-    $ kubectl apply -f deploy/rbac.yaml
-    $ kubectl apply -f deploy/rbac-kube-system.yaml
-    $ kubectl apply -f deploy/builldkite-deployment.yaml
-    $ kubectl apply -f deploy/service.yaml
-    $ kubectl apply -f deploy/apiservice.yaml
+Before deploying Buildscaler, create a secret named
+`buildkite-agent` with a `token` entry, and put the Buildkite Agent Token in
+it. You can retreive the Buildkite agent’s token from the organization’s agents
+page at [builkite.com](https://buildkite.com/).
+
+    $ kubectl create secret generic \
+        buildkite-agent \
+        --from-literal=token=$BUILDKITE_AGENT_TOKEN \
+        --namespace=$NAMESPACE
+
+Then run the install script to deploy buildscaler in your cluster:
+
+	$ cd deploy; ./deploy.sh "$NAMESPACE"
 
 ### Usage for Buildkite
+
 You can use our [manifests](examples/buildkite) as a good starting point for deploying your Buildkite Agent deployment and using exported metrics in HorizontalPodAutoscaler.
 
 List of exported metrics:
