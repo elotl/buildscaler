@@ -3,7 +3,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: buildscaler-apiserver
-  namespace: external-metrics
 spec:
   ports:
     - name: https

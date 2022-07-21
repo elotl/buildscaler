@@ -1,12 +1,13 @@
+kind: ServiceAccount
 apiVersion: v1
-kind: Namespace
 metadata:
-  name: external-metrics
+  name: buildscaler-apiserver
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: external-metrics:system:auth-delegator
+  name: ##NAMESPACE##:system:auth-delegator
+  namespace: ##NAMESPACE##
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -14,21 +15,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: buildscaler-apiserver
-  namespace: external-metrics
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: external-metrics-auth-reader
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: extension-apiserver-authentication-reader
-subjects:
-- kind: ServiceAccount
-  name: buildscaler-apiserver
-  namespace: external-metrics
+  namespace: ##NAMESPACE##
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -41,18 +28,12 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: buildscaler-apiserver
-  namespace: external-metrics
----
-kind: ServiceAccount
-apiVersion: v1
-metadata:
-  name: buildscaler-apiserver
-  namespace: external-metrics
+  namespace: ##NAMESPACE##
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: external-metrics-server-resources
+  name: buildscaler-server-resources
 rules:
 - apiGroups:
   - external.metrics.k8s.io
@@ -62,7 +43,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: external-metrics-resource-reader
+  name: buildscaler-resource-reader
 rules:
 - apiGroups:
   - ""

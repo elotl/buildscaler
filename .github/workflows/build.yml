@@ -55,18 +55,12 @@ jobs:
 
       - name: Smoke test
         run: |
-          BUILDSCALER_IMAGE=$DOCKERHUB_REPO:${{ steps.set_version.outputs.VERSION }} envsubst < deploy/buildkite-deployment.yaml.template > deploy/bk-deploy.yaml
-          cat deploy/bk-deploy.yaml
           kubectl create namespace external-metrics
           kubectl create secret docker-registry --namespace=external-metrics regcred --docker-server=https://index.docker.io/v1/ --docker-username=$DOCKER_USERNAME --docker-password=$DOCKER_PASSWORD --docker-email=dev@elotl.co
-          kubectl create secret generic --namespace=external-metrics buildkite-secrets --from-literal=BUILDKITE_AGENT_TOKEN=$BUILDKITE_AGENT_TOKEN
-          kubectl get secret -n external-metrics buildkite-secrets -o yaml
-          kubectl apply -f deploy/rbac.yaml
-          kubectl apply -f deploy/rbac-kube-system.yaml
+          kubectl create secret generic --namespace=external-metrics buildkite-agent --from-literal=token=$BUILDKITE_AGENT_TOKEN
+          kubectl get secret -n external-metrics buildkite-agent -o yaml
+          (cd deploy; dash -ex ./deploy.sh external-metrics)
           kubectl patch serviceaccount -n external-metrics buildscaler-apiserver -p '{"imagePullSecrets": [{"name": "regcred"}]}'
-          kubectl apply -f deploy/bk-deploy.yaml
-          kubectl apply -f deploy/service.yaml
-          kubectl apply -f deploy/apiservice.yaml
           kubectl describe -n external-metrics deploy/buildscaler-apiserver
           kubectl wait -n external-metrics pod -l app=buildscaler-apiserver --for=condition=ready --timeout=90s
           kubectl describe svc -n external-metrics buildscaler-apiserver

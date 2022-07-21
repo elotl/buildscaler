@@ -5,7 +5,6 @@ metadata:
   labels:
     app: buildscaler-apiserver
   name: buildscaler-apiserver
-  namespace: external-metrics
 spec:
   replicas: 1
   selector:
@@ -28,9 +27,12 @@ spec:
             - --logtostderr=true
             - --v=6
             - --ci-platform=buildkite
-          envFrom:
-            - secretRef:
-                name: buildkite-secrets
+          env:
+            - name: BUILDKITE_AGENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: buildkite-agent
+                  key: token
           ports:
             - containerPort: 6443
               name: https
