@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleci-agent
+  namespace: external-metrics
+  labels:
+    app: circleci-agent
+spec:
+  selector:
+    matchLabels:
+      app: circleci-agent
+  template:
+    metadata:
+      labels:
+        app: circleci-agent
+    spec:
+      containers:
+        - name: circleci-agent
+          image: circleci/agent:3
+          command:
+          	/buildscaler -ci-platform=circleci
+          env:
+            - name: CIRCLECI_PROJECT_SLUG
+              value: <project slug>
+            - name: CIRCLECI_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: circleci-agent
+                  key: token

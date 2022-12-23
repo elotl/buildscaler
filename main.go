@@ -79,7 +79,7 @@ func main() {
 		&CIPlatform,
 		"ci-platform",
 		BuildkitePlatform,
-		fmt.Sprintf("specify CI platform for scraping metrics. \nSupported platforms: %s", CIPlatforms),
+		fmt.Sprintf("CI platform to scrap the metrics from. One of these: %s", CIPlatforms),
 	)
 	adapter.Flags().AddGoFlagSet(flag.CommandLine) // make sure you get the klog flags
 	err := adapter.Flags().Parse(os.Args)
@@ -144,11 +144,11 @@ func GetBuildkiteQueuesFromEnv() []string {
 func GetCircleCIConfigFromEnvOrDie() (string, string) {
 	token := os.Getenv("CIRCLECI_TOKEN")
 	if token == "" {
-		klog.Fatal("cannot get CircleCI API Token from CIRCLECI_TOKEN env var")
+		klog.Fatal("The environment variable CIRCLECI_TOKEN is required")
 	}
 	projectSlug := os.Getenv("CIRCLECI_PROJECT_SLUG")
 	if projectSlug == "" {
-		klog.Fatalf("cannot get CircleCI project slug from CIRCLECI_PROJECT_SLUG en var")
+		klog.Fatal("The environment variable CIRCLECI_PROJECT_SLUG is required")
 	}
 	return token, projectSlug
 }
