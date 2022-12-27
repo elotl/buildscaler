@@ -14,7 +14,7 @@ spec:
     - type: External
       external:
         metric:
-          name: buildkite_busy_agent_percentage
+          name: buildkite_total_busy_agent_percentage
         target:
           type: Value
           value: 60
