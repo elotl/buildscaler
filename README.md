@@ -9,15 +9,11 @@ later used to configure autoscaling via Horizontal Pod Autoscalers.
 
 # Requirements
 
-[golangci-lint](https://golangci-lint.run/)
+[kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
 
-    $ go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
+# Buildkite
 
-# Supported providers
-
-## Buildkite
-
-### Install
+## Install
 
 Requirements:
 
@@ -39,7 +35,7 @@ Then run the install script to deploy buildscaler in your cluster:
 
 	$ cd deploy; ./deploy.sh "$NAMESPACE"
 
-### Usage for Buildkite
+## Usage
 
 You can use our [manifests](examples/buildkite) as a good starting point for deploying your Buildkite Agent deployment and using exported metrics in HorizontalPodAutoscaler.
 
@@ -84,13 +80,20 @@ To get specific metric details:
 
 Additional information about data exposed by Buildkite can be found [here](https://buildkite.com/docs/apis/agent-api/metrics). Buildscaler is using https://agent.buildkite.com/v3/metrics endpoint as a data source.
 
-## CircleCI
+# CircleCI
 
-You have to set up `CIRCLECI_TOKEN` & `CIRCLECI_PROJECT_SLUG`. Currently,
-CircleCI scraper supports only 1 project at the time, meaning that you need
-to have metrics about more projects, you need to run multiple deployments of
-`buildscaler` with different env vars.  Scraper takes into account only jobs
-from pipelines updated earlier than 30 minutes ago.
+You can re-use the Buildkite deployment and switch to the CircleCI provider
+by passing the flag `-ci-platform=circleci` to the buildscaler command.
+
+The environment variables `CIRCLECI_TOKEN` and `CIRCLECI_PROJECT_SLUG`
+are required.
+
+Currently, the CircleCI scraper supports a single project. Therefor if you
+require metrics for multiple projects you will have to run multiple instances
+of Buildcaler: one per project.
+
+The scraper reports metrics for jobs updated in the past 30 minutes. If a
+pipeline’s last job update is more than 30 minutes old it will be ignored.
 
 Exported metrics:
 
@@ -100,9 +103,12 @@ Exported metrics:
 | circleci_jobs_running | jobs with status "running" |
 | circleci_jobs_waiting | jobs with status "waiting" |
 
-## Flare.build
+# Flare.build
 
-Set up `FLAREBUILD_API_KEY`. One metric per os/image combo. There may therefor
+You can re-use the Buildkite deployment and switch to the CircleCI provider
+by passing the flag `-ci-platform=flarebuild` to the buildscaler command.
+
+Set the `FLAREBUILD_API_KEY`. One metric per os/image combo. There may therefor
 be multiple flarebuild_linux_runners metrics due to multiple linux images begin
 run.
 
